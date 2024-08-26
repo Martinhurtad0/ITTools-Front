@@ -19,8 +19,8 @@ export default {
     return {
       audits: [], // Datos de auditorías
       searchQuery: '', // Query para búsqueda
-      sortOrder: 'asc', // Ordenamiento (ascendente o descendente)
-      sortColumn: 'dateTime', // Columna por la cual ordenar
+      sortOrder: 'desc', // Ordenamiento (inicialmente descendente)
+      sortColumn: 'dateTime', // Columna por la cual ordenar (fecha y hora)
     };
   },
   computed: {
@@ -61,23 +61,10 @@ export default {
     formatDateTime(value) {
       return value ? dayjs(value).format('DD/MMM/YYYY HH:mm:ss') : '';
     },
-    sortByColumn(column) {
-      if (this.sortColumn === column) {
-        this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
-      } else {
-        this.sortColumn = column;
-        this.sortOrder = 'asc';
-      }
-    },
-    getSortIcon(column) {
-      if (this.sortColumn === column) {
-        return this.sortOrder === 'asc' ? 'pi pi-arrow-up' : 'pi pi-arrow-down';
-      }
-      return '';
-    },
   },
 };
 </script>
+
 
 <template>
   <div class="flex flex-col h-screen p-4">
@@ -88,41 +75,20 @@ export default {
 
         <!-- Contenedor de búsqueda alineado a la derecha -->
         <div class="flex justify-between items-center mb-2">
-          <Button label="Filter" icon="pi pi-filter" class="p-button-secondary" @click="toggleSortOrder" />
           <InputText v-model="searchQuery" placeholder="Search..." class="p-inputtext p-component" />
         </div>
        
-        <DataTable :value="filteredAudits" class="p-datatable-sm" :paginator="true" :rows="5" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="audits.length">
+        <DataTable :value="filteredAudits" class="p-datatable-sm" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="audits.length" sortMode="multiple">
           <Column field="userName" header="User Name" sortable>
-            <template #header>
-              <span @click="sortByColumn('userName')" class="cursor-pointer">
-                User Name <i :class="getSortIcon('userName')"></i>
-              </span>
-            </template>
           </Column>
           <Column field="userAction" header="Action" sortable>
-            <template #header>
-              <span @click="sortByColumn('userAction')" class="cursor-pointer">
-                Action <i :class="getSortIcon('userAction')"></i>
-              </span>
-            </template>
           </Column>
           <Column field="dateTime" header="Date & Time" sortable>
-            <template #header>
-              <span @click="sortByColumn('dateTime')" class="cursor-pointer">
-               
-              </span>
-            </template>
             <template #body="slotProps">
               {{ formatDateTime(slotProps.data.dateTime) }}
             </template>
           </Column>
           <Column field="userIP" header="User IP" sortable>
-            <template #header>
-              <span @click="sortByColumn('userIP')" class="cursor-pointer">
-              
-              </span>
-            </template>
           </Column>
         </DataTable>
       </div>

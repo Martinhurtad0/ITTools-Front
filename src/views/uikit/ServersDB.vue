@@ -1,6 +1,8 @@
 <script>
 import { regionService } from '@/services/RegionService';
 import { serverService } from '@/services/ServerDBService';
+import { useToast } from 'primevue/usetoast';
+import { ref } from 'vue';
 import Button from 'primevue/button';
 import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
@@ -18,6 +20,25 @@ export default {
         Column,
         Dialog,
         FloatLabel
+    },
+    setup() {
+        const toast = useToast();
+        const error = ref('');
+
+        const showSuccess = (detail) => {
+            toast.add({ severity: 'success', summary: 'Success', detail, life: 3000 });
+        };
+
+        const showError = (detail) => {
+            toast.add({ severity: 'error', summary: 'Error', detail, life: 3000 });
+        };
+
+        return {
+            toast,
+            showSuccess,
+            showError,
+            error
+        };
     },
     data() {
         return {
@@ -59,10 +80,9 @@ export default {
                 dbFR: '',
                 regionId: null
             },
-            error: '',
             showCreateModal: false,
-            serverToDelete: null, // ID del servidor a eliminar
-            filterActiveOnly: true // Control for showing only active servers
+            serverToDelete: null,
+            filterActiveOnly: true
         };
     },
     async created() {
@@ -78,25 +98,31 @@ export default {
             } catch (error) {
                 console.error('Error fetching regions:', error);
                 this.error = 'Failed to load regions';
+                this.showError(this.error);
             }
         },
         async fetchServers() {
             try {
-                const response = await serverService.fetchServers();
-                this.servers = response;
-                this.filterServers(); // Filter servers after fetching them
+                const response = await serverService.fetchServers(); // Llama al servicio para obtener los servidores
+                this.servers = response.map((server) => ({
+                    ...server,
+                    region: this.getRegionName(server.regionId) // Agrega la región al objeto del servidor
+                }));
+                this.filteredServers = [...this.servers]; // Inicializa la lista filtrada con todos los servidores
+                this.filterServers(); // Aplica el filtro después de obtener los servidores
             } catch (error) {
                 console.error('Error fetching servers:', error);
                 this.error = 'Failed to load servers';
+                this.showError(this.error);
             }
         },
         async createServer() {
             if (this.server.password !== this.server.repeatPassword) {
-                this.error = 'Passwords do not match';
+                this.showError('Passwords do not match');
                 return;
             }
             if (!this.validateIP(this.server.ipServer)) {
-                this.error = 'Invalid IP address';
+                this.showError('Invalid IP address');
                 return;
             }
             try {
@@ -113,13 +139,13 @@ export default {
                     regionId: this.server.regionId ? Number(this.server.regionId) : null
                 };
                 await serverService.createServer(serverData);
-                alert('Server created successfully');
+                this.showSuccess('Server created successfully');
                 this.showCreateModal = false;
                 this.resetForm();
                 await this.fetchServers();
             } catch (err) {
                 console.error('Error creating server:', err);
-                this.error = err.message || 'Creation failed';
+                this.showError(err.message || 'Creation failed');
             }
         },
         validateIP(ip) {
@@ -132,7 +158,7 @@ export default {
         },
         getRegionName(regionId) {
             const region = this.regions.find((r) => r.idRegion === regionId);
-            return region ? region.nameRegion : 'Sin región';
+            return region ? region.nameRegion : 'Unknown Region';
         },
         resetForm() {
             this.server = {
@@ -173,11 +199,12 @@ export default {
         async updateServer() {
             try {
                 await serverService.updateServer(this.editServerData.idServer, this.editServerData);
-                this.fetchServers();
+                this.showSuccess('Server updated successfully');
                 this.isEditDialogVisible = false;
+                await this.fetchServers();
             } catch (error) {
                 console.error('Error updating server:', error);
-                this.error = 'Update failed';
+                this.showError('Update failed');
             }
         },
         editServer(server) {
@@ -188,24 +215,25 @@ export default {
             const updatedStatus = server.status === 1 ? 0 : 1;
             try {
                 await serverService.toggleServerStatus(server.idServer, updatedStatus);
-                this.fetchServers();
+                this.showSuccess('Server status changed successfully');
+                await this.fetchServers();
             } catch (error) {
                 console.error('Error toggling server status:', error);
-                this.error = 'Failed to change status';
+                this.showError('Failed to change status');
             }
         },
         async deleteServer() {
-        try {
-            await serverService.deleteServer(this.serverToDelete); // Llama al servicio para eliminar el servidor
-            alert('Server deleted successfully');
-            await this.fetchServers(); // Refresca la lista de servidores
-        } catch (err) {
-            console.error('Error deleting server:', err);
-            this.error = err.message || 'Delete failed';
-        } finally {
-            this.closeDeleteConfirmation(); // Cierra el diálogo de confirmación
-        }
-},
+            try {
+                await serverService.deleteServer(this.serverToDelete);
+                this.showSuccess('Server deleted successfully');
+                await this.fetchServers();
+            } catch (err) {
+                console.error('Error deleting server:', err);
+                this.showError(err.message || 'Delete failed');
+            } finally {
+                this.closeDeleteConfirmation();
+            }
+        },
         closeConfirmation() {
             this.displayConfirmation = false;
         },
@@ -233,6 +261,7 @@ export default {
     }
 };
 </script>
+
 <template>
     <div class="flex flex-col h-screen p-4">
         <!-- Sección de creación de servidor -->
@@ -331,17 +360,17 @@ export default {
                 <!-- Contenedor de búsqueda -->
 
                 <div class="overflow-x-auto">
-                    <DataTable :value="filteredServers" class="p-datatable-sm" :paginator="true" :rows="5" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="servers.length">
-                        <Column field="serverName" header="Server Name" />
-                        <Column field="description" header="Description" />
-                        <Column field="ipServer" header="IP Address" />
-                        <Column field="serverDB" header="Server DB" />
-                        <Column field="region" header="Region">
+                    <DataTable :value="filteredServers" class="p-datatable-sm" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="servers.length" sortMode="multiple">
+                        <Column field="serverName" header="Server Name" sortable />
+                        <Column field="description" header="Description" sortable />
+                        <Column field="ipServer" header="IP Address" sortable />
+                        <Column field="serverDB" header="Server DB" sortable />
+                        <Column field="region" header="Region" sortable>
                             <template #body="{ data }">
                                 <span>{{ getRegionName(data.regionId) }}</span>
                             </template>
                         </Column>
-                        <Column field="status" header="Status">
+                        <Column field="status" header="Status" sortable>
                             <template #body="{ data }">
                                 <span :class="data.status === 1 ? 'text-green-500' : 'text-red-500'">{{ data.status === 1 ? 'Active' : 'Inactive' }}</span>
                             </template>
@@ -393,6 +422,7 @@ export default {
         </Dialog>
 
         <!-- Diálogo de confirmación borrar -->
+
         <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
             <p>Are you sure you want to delete this user?</p>
             <template #footer>

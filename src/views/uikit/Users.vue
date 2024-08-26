@@ -1,4 +1,6 @@
 <script>
+import { ref } from 'vue';
+import { useToast } from 'primevue/usetoast';
 import { registerUser, authService } from '@/services/AuthService';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
@@ -15,7 +17,26 @@ export default {
         Checkbox,
         DataTable,
         Column,
-        Dialog
+        Dialog,
+    },
+    setup() {
+        const toast = useToast();
+        const error = ref('');
+
+        const showSuccess = (detail) => {
+            toast.add({ severity: 'success', summary: 'Success', detail, life: 3000 });
+        };
+
+        const showError = (detail) => {
+            toast.add({ severity: 'error', summary: 'Error', detail, life: 3000 });
+        };
+
+        return {
+            toast,
+            showSuccess,
+            showError,
+            error
+        };
     },
     data() {
         return {
@@ -29,7 +50,6 @@ export default {
             },
             roles: ['USER', 'ADMIN'],
             selectedRoles: [],
-            error: '',
             users: [],
             filteredUsers: [],
             searchQuery: '',
@@ -74,12 +94,12 @@ export default {
             try {
                 this.editUserData.roles = this.selectedRoles;
                 await registerUser(this.editUserData);
-                alert('User registered successfully');
+                this.showSuccess('User registered successfully');
                 await this.loadUsers();
                 this.resetForm(); // Limpia el formulario después de registrar el usuario
                 this.isCreateUserDialogVisible = false;
             } catch (err) {
-                this.error = err.message || 'Registration failed';
+                this.showError(this.error || 'Registration failed');
             }
         },
         async loadUsers() {
@@ -118,23 +138,23 @@ export default {
         async updateUser() {
             try {
                 await authService.updateUser(this.editUserData);
-                alert('User updated successfully');
+                this.showSuccess('User updated successfully');
                 await this.loadUsers();
-                this.resetForm(); // Limpia el formulario después de actualizar el usuario
+                this.resetForm();
                 this.isEditDialogVisible = false;
             } catch (err) {
-                this.error = err.message || 'Update failed';
+                this.showError(this.error || 'Update failed');
             }
         },
         async deleteUser() {
             try {
-                await authService.deleteUser(this.userToDelete); // Assuming deleteUser method is in authService
-                alert('User deleted successfully');
-                await this.loadUsers(); // Refresh the list
+                await authService.deleteUser(this.userToDelete);
+                this.showSuccess('User deleted successfully');
+                await this.loadUsers();
                 this.displayDeleteConfirmation = false;
                 this.userToDelete = null;
             } catch (err) {
-                this.error = err.message || 'Delete failed';
+                this.showError(this.error || 'Delete failed');
             }
         },
         openConfirmation(user, isActivating) {
@@ -146,12 +166,12 @@ export default {
             try {
                 const updatedUser = { ...this.userToChangeStatus, status: this.isActivating };
                 await authService.updateUser(updatedUser);
-                alert(`User ${this.isActivating ? 'activated' : 'deactivated'} successfully`);
+                this.showSuccess(`User ${this.isActivating ? 'activated' : 'deactivated'} successfully`);
                 await this.loadUsers();
                 this.displayConfirmation = false;
                 this.userToChangeStatus = null;
             } catch (err) {
-                this.error = err.message || 'Status change failed';
+                this.showError(this.error || 'Status change failed');
             }
         },
         closeConfirmation() {
@@ -185,6 +205,7 @@ export default {
 };
 </script>
 
+
 <template>
     <div class="flex flex-col h-screen p-4">
         <div class="flex-2">
@@ -201,15 +222,15 @@ export default {
                 </div>
 
                 <div class="overflow-x-auto">
-                    <DataTable :value="filteredUsers" class="p-datatable-sm" :paginator="true" :rows="5" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="users.length">
-                        <Column field="full_name" header="Full Name" />
-                        <Column field="area" header="Area" />
-                        <Column field="roles" header="Roles">
+                    <DataTable :value="filteredUsers" class="p-datatable-sm" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="users.length"  sortMode="multiple">
+                        <Column field="full_name" header="Full Name"  sortable />
+                        <Column field="area" header="Area"  sortable />
+                        <Column field="roles" header="Roles"  sortable >
                             <template #body="{ data }">
                                 <span>{{ data.roles.join(', ') }}</span>
                             </template>
                         </Column>
-                        <Column field="status" header="Status">
+                        <Column field="status" header="Status"  sortable >
                             <template #body="{ data }">
                                 <span :class="data.status ? 'text-green-500' : 'text-red-500'">{{ data.status ? 'Active' : 'Inactive' }}</span>
                             </template>
@@ -245,53 +266,58 @@ export default {
             </div>
         </Dialog>
 
-        <!-- Diálogo de creación de usuario -->
-        <Dialog v-model:visible="isCreateUserDialogVisible" header="Create User" modal :style="{ 'max-width': '30vw', width: '30vw' }">
-            <form @submit.prevent="registerUser">
-                <div class="flex gap-4">
-                    <!-- Sección de Inputs -->
-                    <div class="flex flex-col w-1/2 gap-4">
-                        <div class="flex flex-wrap gap-4">
-                            <div class="flex flex-col grow basis-0 gap-2">
-                                <label for="emailCreate">Email</label>
-                                <InputText id="emailCreate" type="email" v-model="editUserData.email" class="p-inputtext-sm input-with-line" placeholder="Enter Email" required />
-                            </div>
-                            <div class="flex flex-col grow basis-0 gap-2">
-                                <label for="passwordCreate">Password</label>
-                                <InputText id="passwordCreate" type="password" v-model="editUserData.password" class="p-inputtext-sm input-with-line" placeholder="Enter Password" required />
-                            </div>
-                            <div class="flex flex-col grow basis-0 gap-2">
-                                <label for="full_nameCreate">Full Name</label>
-                                <InputText id="full_nameCreate" type="text" v-model="editUserData.full_name" class="p-inputtext-sm input-with-line" placeholder="Enter Full Name" required />
-                            </div>
-                            <div class="flex flex-col grow basis-0 gap-2">
-                                <label for="chargeCreate">Charge</label>
-                                <InputText id="chargeCreate" type="text" v-model="editUserData.charge" class="p-inputtext-sm input-with-line" placeholder="Enter Charge" required />
-                            </div>
-                            <div class="flex flex-col grow basis-0 gap-2">
-                                <label for="areaCreate">Area</label>
-                                <InputText id="areaCreate" type="text" v-model="editUserData.area" class="p-inputtext-sm input-with-line" placeholder="Enter Area" required />
+      
+            <!-- Diálogo de creación de usuario -->
+            <Dialog v-model:visible="isCreateUserDialogVisible" header="Create User" modal :style="{ 'max-width': '30vw', width: '30vw' }">
+                <form @submit.prevent="registerUser">
+                    <div class="flex gap-4">
+                        <!-- Sección de Inputs -->
+                        <div class="flex flex-col w-1/2 gap-4">
+                            <div class="flex flex-wrap gap-4">
+                                <div class="flex flex-col grow basis-0 gap-2">
+                                    <label for="emailCreate">Email</label>
+                                    <InputText id="emailCreate" type="email" v-model="editUserData.email" class="p-inputtext-sm input-with-line" placeholder="Enter Email" required />
+                                </div>
+                                <div class="flex flex-col grow basis-0 gap-2">
+                                    <label for="passwordCreate">Password</label>
+                                    <InputText id="passwordCreate" type="password" v-model="editUserData.password" class="p-inputtext-sm input-with-line" placeholder="Enter Password" required />
+                                </div>
+                                <div class="flex flex-col grow basis-0 gap-2">
+                                    <label for="full_nameCreate">Full Name</label>
+                                    <InputText id="full_nameCreate" type="text" v-model="editUserData.full_name" class="p-inputtext-sm input-with-line" placeholder="Enter Full Name" required />
+                                </div>
+                                <div class="flex flex-col grow basis-0 gap-2">
+                                    <label for="chargeCreate">Charge</label>
+                                    <InputText id="chargeCreate" type="text" v-model="editUserData.charge" class="p-inputtext-sm input-with-line" placeholder="Enter Charge" required />
+                                </div>
+                                <div class="flex flex-col grow basis-0 gap-2">
+                                    <label for="areaCreate">Area</label>
+                                    <InputText id="areaCreate" type="text" v-model="editUserData.area" class="p-inputtext-sm input-with-line" placeholder="Enter Area" required />
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <!-- Sección de Roles -->
-                    <div class="flex flex-col w-1/2 gap-2 pl-12">
-                        <!-- Añadido padding-left para espaciar -->
-                        <div class="flex flex-col gap-2">
-                            <label>Roles</label>
+                        <!-- Sección de Roles -->
+                        <div class="flex flex-col w-1/2 gap-2 pl-12">
+                            <!-- Añadido padding-left para espaciar -->
                             <div class="flex flex-col gap-2">
-                                <div v-for="role in roles" :key="role" class="flex items-center">
-                                    <Checkbox v-model="selectedRoles" :value="role" :label="role" class="mr-2" />
-                                    <span>{{ role }}</span>
+                                <label>Roles</label>
+                                <div class="flex flex-col gap-2">
+                                    <div v-for="role in roles" :key="role" class="flex items-center">
+                                        <Checkbox v-model="selectedRoles" :value="role" :label="role" class="mr-2" />
+                                        <span>{{ role }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <Button type="submit" label="Create" class="p-button-primary mt-3" />
-            </form>
-        </Dialog>
+                    <Button type="submit" label="Create" class="p-button-primary mt-3" />
+                </form>
+            </Dialog>
+        
+
+        
+      
 
         <!-- Diálogo de confirmación borrar -->
         <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
@@ -303,6 +329,12 @@ export default {
                 </div>
             </template>
         </Dialog>
+
+
+    
+
+        
+      
 
         <!-- Diálogo de confirmación inactivar-->
         <Dialog v-model:visible="displayConfirmation" header="Confirmation" modal class="max-w-sm">
@@ -316,6 +348,9 @@ export default {
                 </div>
             </template>
         </Dialog>
+       
+
+      
 
         <!-- Diálogo de edición -->
         <Dialog v-model:visible="isEditDialogVisible" header="Edit User" modal :style="{ 'max-width': '30vw', width: '30vw' }">
@@ -364,6 +399,7 @@ export default {
                 <Button type="submit" label="Save" class="p-button-primary mt-3" />
             </form>
         </Dialog>
+       
     </div>
 </template>
 

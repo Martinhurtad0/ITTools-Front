@@ -6,6 +6,7 @@ import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
+import { useToast } from 'primevue/usetoast';
 
 export default {
     components: {
@@ -13,7 +14,24 @@ export default {
         Button,
         DataTable,
         Column,
-        Dialog
+        Dialog,
+    },
+    setup() {
+        const toast = useToast();
+
+        const showSuccess = (detail) => {
+            toast.add({ severity: 'success', summary: 'Success', detail, life: 3000 });
+        };
+
+        const showError = (detail) => {
+            toast.add({ severity: 'error', summary: 'Error', detail, life: 3000 });
+        };
+
+        return {
+            toast,
+            showSuccess,
+            showError,
+        };
     },
     data() {
         return {
@@ -40,13 +58,10 @@ export default {
             displayConfirmation: false,
             regionToChangeStatus: null,
             isActivating: false,
-            error: '',
             detailRegionData: {},
             filterActiveOnly: true,
             displayDeleteConfirmation: false,
             regionToDelete: null,
-            errorMessage: '', // Nuevo estado para manejar el mensaje de error
-            showErrorDialog: false // Estado para mostrar el diálogo de error
         };
     },
     async created() {
@@ -59,29 +74,25 @@ export default {
                 this.regions = await regionService.getAllRegions();
                 this.applyFilter();
             } catch (error) {
+                this.showError('Error fetching regions');
                 console.error('Error fetching regions:', error);
             }
         },
         async registerRegion() {
-    try {
-        await regionService.createRegion(this.region);
-        alert('Region created successfully');
-        await this.loadRegions();
-        this.resetForm();
-        this.isRegionDialogVisible = false; // Cerrar el diálogo después de la creación
-      
-    } catch (err) {
-        // Manejar el error y mostrar el mensaje correspondiente
-        if (err.response && err.response.status === 409) { // 409 Conflict
-            this.errorMessage = err.response.data;
-            // Obtener el mensaje de error del backend
-        } else {
-            this.errorMessage = err.message || 'Creation failed';
-        }
-        this.showErrorDialog = true;
-        this.isRegionDialogVisible=false;  // Mostrar el diálogo de error
-    }
-},
+            try {
+                await regionService.createRegion(this.region);
+                this.showSuccess('Region created successfully');
+                await this.loadRegions();
+                this.resetForm();
+                this.isRegionDialogVisible = false; // Cerrar el diálogo después de la creación
+            } catch (err) {
+                const errorMessage = err.response && err.response.status === 409
+                    ? err.response.data
+                    : err.message || 'Creation failed';
+                this.showError(errorMessage);
+                this.isRegionDialogVisible = false; // Cerrar el diálogo
+            }
+        },
         resetForm() {
             this.region = {
                 nameRegion: '',
@@ -96,11 +107,11 @@ export default {
         async updateRegion() {
             try {
                 await regionService.updateRegion(this.editRegionData.idRegion, this.editRegionData);
-                alert('Region updated successfully');
+                this.showSuccess('Region updated successfully');
                 await this.loadRegions();
                 this.isEditDialogVisible = false;
             } catch (err) {
-                this.error = err.message || 'Update failed';
+                this.showError(err.message || 'Update failed');
             }
         },
         openConfirmation(region, isActivating) {
@@ -113,36 +124,34 @@ export default {
             this.isRegionDialogVisible = true;
         },
         openDeleteConfirmation(region) {
-    // Asignar la región a eliminar
-    this.regionToDelete = region;
-    this.displayDeleteConfirmation = true; // Mostrar el diálogo de confirmación
-},
-async deleteRegion() {
-    if (!this.regionToDelete || this.regionToDelete.idRegion == null) {
-        this.errorMessage = 'Region ID is missing';
-        return;
-    }
+            this.regionToDelete = region;
+            this.displayDeleteConfirmation = true; // Mostrar el diálogo de confirmación
+        },
+        async deleteRegion() {
+            if (!this.regionToDelete || this.regionToDelete.idRegion == null) {
+                this.showError('Region ID is missing');
+                return;
+            }
 
-    try {
-        await regionService.deleteRegion(this.regionToDelete.idRegion);
-        alert('Region deleted successfully');
-        await this.loadRegions(); // Recargar las regiones para reflejar los cambios
-        this.displayDeleteConfirmation = false; // Cerrar el diálogo de confirmación
-        this.regionToDelete = null; // Limpiar la región a eliminar
-    } catch (error) {
-        // Manejar el error que proviene del backend
-        this.errorMessage = error.response?.data || 'Deletion failed';
-        this.showErrorDialog = true; // Mostrar el diálogo de error
-        this.displayDeleteConfirmation = false; // Cerrar el diálogo de confirmación
-    }
-},
+            try {
+                const response = await regionService.deleteRegion(this.regionToDelete.idRegion);
 
+                if (response.status === 409) { // Supongamos que el backend devuelve 409 si la región está en uso
+                    this.showError('Cannot delete region: it is currently assigned to a server or agent.');
+                } else {
+                    this.showSuccess('Region deleted successfully');
+                    await this.loadRegions(); // Recargar las regiones para reflejar los cambios
+                    this.displayDeleteConfirmation = false; // Cerrar el diálogo de confirmación
+                    this.regionToDelete = null; // Limpiar la región a eliminar
+                }
+            } catch (error) {
+                this.showError(error.response?.data || 'Deletion failed');
+                this.displayDeleteConfirmation = false; // Cerrar el diálogo de confirmación
+            }
+        },
         closeDeleteConfirmation() {
             this.displayDeleteConfirmation = false;
             this.regionToDelete = null;
-        },
-        closeErrorDialog() {
-            this.showErrorDialog = false; // Cerrar el diálogo de error
         },
         showRegionDetails(region) {
             this.detailRegionData = { ...region };
@@ -150,18 +159,23 @@ async deleteRegion() {
         },
         async changeRegionStatus() {
             if (!this.regionToChangeStatus || this.regionToChangeStatus.idRegion == null) {
-                this.error = 'Region ID is missing';
+                this.showError('Region ID is missing');
                 return;
             }
+
             try {
                 await regionService.updateRegionStatus(this.regionToChangeStatus.idRegion, this.isActivating ? 1 : 0);
-                alert(`Region ${this.isActivating ? 'activated' : 'deactivated'} successfully`);
+                this.showSuccess(`Region ${this.isActivating ? 'activated' : 'deactivated'} successfully`);
                 await this.loadRegions();
                 this.displayConfirmation = false;
                 this.regionToChangeStatus = null;
             } catch (err) {
-                this.error = err.message || 'Status change failed';
+                this.showError(err.message || 'Status change failed');
             }
+        },
+        closeConfirmation() {
+            this.displayConfirmation = false;
+            this.userToChangeStatus = null;
         },
         applyFilter() {
             this.filteredRegions = this.regions.filter(region => {
@@ -191,6 +205,7 @@ async deleteRegion() {
 </script>
 
 
+
 <template>
      <div class="flex flex-col h-screen p-4">
         <div class="flex-2">
@@ -208,7 +223,7 @@ async deleteRegion() {
                         :value="filteredRegions" 
                         class="p-datatable-sm" 
                         :paginator="true" 
-                        :rows="5" 
+                        :rows="10" 
                         :rowsPerPageOptions="[5, 10, 20]" 
                         :totalRecords="regions.length"
                         sortMode="multiple"
@@ -250,6 +265,9 @@ async deleteRegion() {
                 </div>
             </div>
         </div>
+        
+      
+
         <!-- Diálogo de confirmación eliminar -->
         <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
             <p>Are you sure you want to delete this region?</p>
@@ -260,13 +278,8 @@ async deleteRegion() {
                 </div>
             </template>
         </Dialog>
-
-        <!-- Diálogo de error -->
-        <Dialog v-model:visible="showErrorDialog" header="Error" modal style="height: 15vw; width: 25vw;">
-       <p>{{ errorMessage }}</p>
    
-      </Dialog>
-       <!-- Diálogo de error -->
+        
       <Dialog v-model:visible="displayConfirmation" header="Confirmation" modal class="max-w-sm">
             <p>Are you sure you want to proceed with this action?</p>
             <template #footer>
@@ -276,6 +289,8 @@ async deleteRegion() {
                 </div>
             </template>
         </Dialog>
+     
+
         <!-- Diálogo de creación de región -->
         <Dialog v-model:visible="isRegionDialogVisible" modal header="Create Region">
             <form @submit.prevent="registerRegion">
@@ -294,6 +309,7 @@ async deleteRegion() {
                 <Button type="submit" label="Create" class="p-button-primary mt-3" />
             </form>
         </Dialog>
+     
 
         <!-- Diálogo de detalles de región -->
         <Dialog v-model:visible="isShowDialogVisible" header="Region Details" modal :style="{ 'max-width': '20vw', width: '20vw' }"> 
@@ -303,6 +319,8 @@ async deleteRegion() {
                 <p><strong>Status:</strong> <span :class="detailRegionData.status ? 'text-green-500' : 'text-red-500'">{{ detailRegionData.status ? 'Active' : 'Inactive' }}</span></p>
             </div>
         </Dialog>
+
+       
 
         <!-- Diálogo de edición de región -->
         <Dialog v-model:visible="isEditDialogVisible" modal header="Edit Region">
@@ -322,5 +340,6 @@ async deleteRegion() {
                 <Button type="submit" label="Save" class="p-button-primary mt-3" />
             </form>
         </Dialog>
-    </div>
+        </div>
+   
 </template>

@@ -6,6 +6,8 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
 import { FilterMatchMode } from '@primevue/core/api';
+import { useToast } from 'primevue/usetoast';
+import { ref } from 'vue';
 
 export default {
     components: {
@@ -13,7 +15,26 @@ export default {
         Button,
         DataTable,
         Column,
-        Dialog
+        Dialog,
+    },
+    setup() {
+        const toast = useToast();
+        const error = ref('');
+
+        const showSuccess = (detail) => {
+            toast.add({ severity: 'success', summary: 'Success', detail, life: 3000 });
+        };
+
+        const showError = (detail) => {
+            toast.add({ severity: 'error', summary: 'Error', detail, life: 3000 });
+        };
+
+        return {
+            toast,
+            showSuccess,
+            showError,
+            error
+        };
     },
     data() {
         return {
@@ -23,7 +44,6 @@ export default {
             },
             roles: [],
             filteredRoles: [], // Usado para el filtrado de roles
-            error: '',
             selectedRoleId: null,
             isEditDialogVisible: false,
             isCreateRoleDialogVisible: false,
@@ -54,11 +74,11 @@ export default {
         async registerRole() {
             try {
                 await roleService.registerRole(this.role);
-                alert('Role registered successfully');
+                this.showSuccess('Role registered successfully');
                 await this.loadRoles();
                 this.isCreateRoleDialogVisible = false;
             } catch (err) {
-                this.error = err.message || 'Registration failed';
+                this.showError(this.error || 'Registration failed');
             }
         },
         async loadRoles() {
@@ -67,6 +87,7 @@ export default {
                 this.showAll = false; // Por defecto, solo mostrar roles activos
                 this.filterRoles(); // Aplica el filtro inicial
             } catch (error) {
+                this.showError('Error fetching roles');
                 console.error('Error fetching roles:', error);
             }
         },
@@ -88,22 +109,22 @@ export default {
         async updateRole() {
             try {
                 await roleService.updateRole(this.editRoleData.id, this.editRoleData);
-                alert('Role updated successfully');
+                this.showSuccess('Role updated successfully');
                 await this.loadRoles();
                 this.isEditDialogVisible = false;
             } catch (err) {
-                this.error = err.message || 'Update failed';
+                this.showError(this.error || 'Update failed');
             }
         },
         async deleteRole() {
             try {
                 await roleService.deleteRole(this.roleToDelete);
-                alert('Role deleted successfully');
+                this.showSuccess('Role deleted successfully');
                 await this.loadRoles();
                 this.displayDeleteConfirmation = false;
                 this.roleToDelete = null;
             } catch (err) {
-                this.error = err.message || 'Delete failed';
+                this.showError(this.error || 'Delete failed');
             }
         },
         openConfirmation(role, isActivating) {
@@ -114,12 +135,12 @@ export default {
         async changeRoleStatus() {
             try {
                 await roleService.updateRole(this.roleToChangeStatus.id, this.roleToChangeStatus);
-                alert(`Role ${this.isActivating ? 'activated' : 'deactivated'} successfully`);
+                this.showSuccess(`Role ${this.isActivating ? 'activated' : 'deactivated'} successfully`);
                 await this.loadRoles();
                 this.displayConfirmation = false;
                 this.roleToChangeStatus = null;
             } catch (err) {
-                this.error = err.message || 'Status change failed';
+                this.showError(this.error || 'Status change failed');
             }
         },
         closeConfirmation() {
@@ -153,6 +174,7 @@ export default {
 };
 </script>
 
+
 <template>
     <div class="flex flex-col h-screen p-4">
         <div class="flex-2">
@@ -169,10 +191,10 @@ export default {
                 </div>
 
                 <div class="overflow-x-auto">
-                    <DataTable :value="filteredRoles" class="p-datatable-sm" :paginator="true" :rows="5" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="filteredRoles.length">
-                        <Column field="authority" header="Name" />
-                        <Column field="description" header="Description" />
-                        <Column field="status" header="Status">
+                    <DataTable :value="filteredRoles" class="p-datatable-sm" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="filteredRoles.length" sortMode="multiple">
+                        <Column field="authority" header="Name" sortable />
+                        <Column field="description" header="Description" sortable/>
+                        <Column field="status" header="Status" sortable>
                             <template #body="{ data }">
                                 <span :class="data.status ? 'text-green-500' : 'text-red-500'">{{ data.status ? 'Active' : 'Inactive' }}</span>
                             </template>
@@ -209,6 +231,9 @@ export default {
                 <Button type="submit" label="Create" class="p-button-primary mt-3" />
             </form>
         </Dialog>
+    
+
+
 
         <!-- Diálogo de edición de rol -->
         <Dialog v-model:visible="isEditDialogVisible" header="Edit Role" modal :style="{ 'max-width': '20vw', width: '20vw' }">
@@ -226,6 +251,9 @@ export default {
                 <Button type="submit" label="Save" class="p-button-primary mt-3" />
             </form>
         </Dialog>
+    
+
+
 
         <!-- Diálogo de confirmación borrar -->
         <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
@@ -237,6 +265,10 @@ export default {
                 </div>
             </template>
         </Dialog>
+        
+
+        
+
 
         <!-- Diálogo de confirmación inactivar-->
         <Dialog v-model:visible="displayConfirmation" header="Confirmation" modal class="max-w-sm">

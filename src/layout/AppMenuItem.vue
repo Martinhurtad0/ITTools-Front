@@ -50,21 +50,24 @@ function toggleMenu() {
 }
 
 .menu-icon {
-    margin-right: 0.25rem; /* Reduced space between icon and text */
+    font-size: 1.5rem;
+    margin-right: 1rem;
 }
 
 .menu-label {
-    margin-right: auto; /* Push the text to the left */
+    font-size: 1rem;
+    margin-right: auto;
 }
 
 .layout-submenu {
     list-style: none;
     padding: 0;
     margin: 0;
-    padding-left: 1rem; /* Align submenu with the parent item */
+    padding-left: 1rem;
 }
 
 .layout-submenu .menu-link {
-    padding-left: 2rem; /* Add padding for submenu items */
+    padding-left: 2rem;
+    font-size: 0.875rem;
 }
 </style>

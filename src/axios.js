@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Configurar Axios
-axios.defaults.baseURL = 'http://192.168.2.133:8080'; // Cambia según tu baseURL
+axios.defaults.baseURL = 'http://192.168.2.148:8080'; // Cambia según tu baseURL
 
 // Interceptor de solicitud para incluir el token JWT
 axios.interceptors.request.use(

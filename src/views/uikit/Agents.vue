@@ -7,6 +7,8 @@ import DataTable from 'primevue/datatable';
 import Dialog from 'primevue/dialog';
 import Dropdown from 'primevue/dropdown';
 import InputText from 'primevue/inputtext';
+import { useToast } from 'primevue/usetoast';
+import { ref } from 'vue';
 
 export default {
     components: {
@@ -17,27 +19,47 @@ export default {
         Column,
         Dialog
     },
+    setup() {
+        const toast = useToast();
+        const error = ref('');
+
+        const showSuccess = (detail) => {
+            toast.add({ severity: 'success', summary: 'Success', detail, life: 3000 });
+        };
+
+        const showError = (detail) => {
+            toast.add({ severity: 'error', summary: 'Error', detail, life: 3000 });
+        };
+
+        return {
+            toast,
+            showSuccess,
+            showError,
+            error
+        };
+    },
     data() {
         return {
             servers: [],
-            filteredServers: [], // Almacena los servidores filtrados
+            filteredServers: [],
             regions: [],
             isEditDialogVisible: false,
             displayConfirmation: false,
             isCreateServerDialogVisible: false,
             isActivating: false,
             selectedServer: null,
-            searchQuery: '', // Para la búsqueda global
-            showActiveServers: false, // Para filtrar solo activos
+            searchQuery: '',
+            showActiveServers: false,
             isShowDialogVisible: false,
             displayDeleteConfirmation: false,
             showAll: false,
+            serverToDelete: null,
             server: {
                 agentName: '',
                 ipAgent: '',
                 webServiceUrl: '',
                 pathArchive: '',
-                regionId: null // Para almacenar el ID de la región seleccionada
+                regionId: null
             },
             newServer: {
                 agentName: '',
@@ -70,22 +92,27 @@ export default {
     },
     watch: {
         searchQuery() {
-            this.applyFilters(); // Aplica búsqueda global cuando cambia el input de búsqueda
+            this.applyFilters();
         },
         showActiveServers() {
-            this.applyFilters(); // Aplica el filtro de activos
+            this.applyFilters();
         },
         servers() {
-            this.applyFilters(); // Aplica los filtros cuando cambia la lista de servidores
+            this.applyFilters();
         }
     },
     methods: {
         async fetchServers() {
             try {
-                this.servers = await serverService.getAllServers();
-                this.filteredServers = [...this.servers]; // Inicializa los servidores filtrados
+                const servers = await serverService.getAllServers();
+                this.servers = servers.map((server) => ({
+                    ...server,
+                    region: this.getRegionNameById(server.regionId) // Agrega la región al objeto del servidor
+                }));
+                this.filteredServers = [...this.servers];
             } catch (error) {
                 console.error('Error fetching servers:', error);
+                this.showError('Error fetching servers');
             }
         },
         applyFilters() {
@@ -96,17 +123,14 @@ export default {
                 return matchesSearch && matchesActiveFilter;
             });
         },
-
         toggleFilter() {
-            this.showAll = !this.showAll; // Alterna el estado de showAll
-            this.applyFilters(); // Aplica el filtro actualizado
+            this.showAll = !this.showAll;
+            this.applyFilters();
         },
-
         getRegionNameById(regionId) {
             const region = this.regions.find((region) => region.idRegion === regionId);
             return region ? region.nameRegion : 'Unknown Region';
         },
-
         editServer(server) {
             this.editServerData = { ...server };
             this.isEditDialogVisible = true;
@@ -124,22 +148,22 @@ export default {
                 await serverService.updateServer(this.editServerData);
                 await this.fetchServers();
                 this.isEditDialogVisible = false;
+                this.showSuccess('Server updated successfully');
             } catch (error) {
                 console.error('Error updating server:', error);
-                this.error = 'Update failed';
+                this.showError('Update failed');
             }
         },
         async deleteAgent() {
             try {
-                // Confirmación antes de eliminar
-                    await serverService.deleteAgent(this.serverToDelete);
-                    alert('Agent deleted successfully');
-                    await this.fetchServers(); // Recarga la lista de servidores después de la eliminación    
-                    this.displayDeleteConfirmation = false;
-                    this.serverToDelete = null;
-                  } catch (error) {
+                await serverService.deleteAgent(this.serverToDelete);
+                this.showSuccess('Agent deleted successfully');
+                await this.fetchServers();
+                this.displayDeleteConfirmation = false;
+                this.serverToDelete = null;
+            } catch (error) {
                 console.error('Error deleting agent:', error);
-                alert('Error deleting agent: ' + error.message);
+                this.showError(`Error deleting agent: ${error.message}`);
             }
         },
         async changeServerStatus() {
@@ -148,6 +172,7 @@ export default {
                 this.closeConfirmation();
             } catch (error) {
                 console.error('Error changing server status:', error.message);
+                this.showError('Failed to update server status');
             }
         },
         openConfirmation(server, isActivating) {
@@ -168,26 +193,27 @@ export default {
                 await serverService.updateServerStatus(server.idAgent);
                 server.status = updatedStatus;
                 await this.fetchServers();
+                this.showSuccess('Server status updated successfully');
             } catch (error) {
                 console.error('Error updating server status:', error.message);
+                this.showError('Failed to update server status');
             }
         },
-
         closeConfirmation() {
             this.displayConfirmation = false;
         },
-
         async loadRegions() {
             try {
                 const allRegions = await regionService.getAllRegions();
                 this.regions = allRegions.filter((region) => region.status === 1);
             } catch (error) {
                 console.error('Error fetching regions:', error);
+                this.showError('Error fetching regions');
             }
         },
         async createServer() {
             if (!this.validateIP(this.newServer.ipAgent)) {
-                this.error = 'Invalid IP address';
+                this.showError('Invalid IP address');
                 return;
             }
             try {
@@ -199,13 +225,13 @@ export default {
                     regionId: this.newServer.regionId ? Number(this.newServer.regionId) : null
                 };
                 await serverService.createServer(serverData);
-                alert('Server created successfully');
+                this.showSuccess('Server created successfully');
                 this.resetNewServerForm();
                 await this.fetchServers();
                 this.closeCreateServerDialog();
             } catch (err) {
                 console.error('Error creating server:', err.message);
-                this.error = err.message || 'Creation failed';
+                this.showError(err.message || 'Creation failed');
             }
         },
         resetNewServerForm() {
@@ -228,6 +254,7 @@ export default {
 };
 </script>
 
+
 <template>
     <div class="flex flex-col h-screen p-4">
         <div class="flex-2 overflow-auto">
@@ -243,21 +270,20 @@ export default {
                     <InputText v-model="searchQuery" placeholder="Global search..." class="p-inputtext p-component" />
                 </div>
                 <div class="overflow-x-auto">
-                    <DataTable :value="filteredServers" class="p-datatable-sm" :paginator="true" :rows="5" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="servers.length">
-                        <Column field="agentName" header="Server Name" />
-                        <Column field="ipAgent" header="IP Agent" />
-                        <Column field="webServiceUrl" header="WebService URL" />
-                        <Column field="pathArchive" header="Path Archive" />
+                    <DataTable :value="filteredServers" class="p-datatable-sm" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="servers.length" sortMode="multiple">
+                        <Column field="agentName" header="Server Name" sortable />
+                        <Column field="ipAgent" header="IP Agent" sortable />
+                        <Column field="webServiceUrl" header="WebService URL" sortable />
+                        <Column field="pathArchive" header="Path Archive" sortable />
 
                         <!-- Nueva columna para mostrar la región -->
-                        <Column header="Region">
+                        <Column field="region" header="Region" sortable>
                             <template #body="{ data }">
-                                <!-- Muestra el nombre de la región en lugar del ID -->
                                 {{ getRegionNameById(data.regionId) }}
                             </template>
                         </Column>
 
-                        <Column field="status" header="Status">
+                        <Column field="status" header="Status" sortable>
                             <template #body="{ data }">
                                 <span :class="data.status ? 'text-green-500' : 'text-red-500'">{{ data.status ? 'Active' : 'Inactive' }}</span>
                             </template>
@@ -279,45 +305,46 @@ export default {
             </div>
         </div>
 
-         <!-- Modal de edición de servidor -->
-    <Dialog header="Edit Server" v-model:visible="isEditDialogVisible" modal :style="{ 'max-width': '30vw', width: '30vw' }">
-        <form @submit.prevent="updateServer">
-            <div class="flex gap-4">
-                <!-- Sección de Inputs (columna izquierda) -->
-                <div class="flex flex-col w-1/2 gap-4">
-                    <div class="flex flex-col gap-2">
-                        <label for="edit_serverName">Server Name</label>
-                        <InputText id="edit_serverName" type="text" v-model="editServerData.agentName" class="p-inputtext-sm input-with-line" placeholder="Enter Server Name" />
+        <!-- Modal de edición de servidor -->
+
+        <Dialog header="Edit Server" v-model:visible="isEditDialogVisible" modal :style="{ 'max-width': '30vw', width: '30vw' }">
+            <form @submit.prevent="updateServer">
+                <div class="flex gap-4">
+                    <!-- Sección de Inputs (columna izquierda) -->
+                    <div class="flex flex-col w-1/2 gap-4">
+                        <div class="flex flex-col gap-2">
+                            <label for="edit_serverName">Server Name</label>
+                            <InputText id="edit_serverName" type="text" v-model="editServerData.agentName" class="p-inputtext-sm input-with-line" placeholder="Enter Server Name" />
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="edit_ipAgent">IP Address</label>
+                            <InputText id="edit_ipAgent" type="text" v-model="editServerData.ipAgent" class="p-inputtext-sm input-with-line" placeholder="Enter IP Address" />
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="edit_webServiceUrl">Web Service URL</label>
+                            <InputText id="edit_webServiceUrl" type="text" v-model="editServerData.webServiceUrl" class="p-inputtext-sm input-with-line" placeholder="Enter Web Service URL" />
+                        </div>
                     </div>
-                    <div class="flex flex-col gap-2">
-                        <label for="edit_ipAgent">IP Address</label>
-                        <InputText id="edit_ipAgent" type="text" v-model="editServerData.ipAgent" class="p-inputtext-sm input-with-line" placeholder="Enter IP Address" />
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label for="edit_webServiceUrl">Web Service URL</label>
-                        <InputText id="edit_webServiceUrl" type="text" v-model="editServerData.webServiceUrl" class="p-inputtext-sm input-with-line" placeholder="Enter Web Service URL" />
+
+                    <!-- Sección de Inputs (columna derecha) -->
+                    <div class="flex flex-col w-1/2 gap-4">
+                        <div class="flex flex-col gap-2">
+                            <label for="edit_pathArchive">Path Archive</label>
+                            <InputText id="edit_pathArchive" type="text" v-model="editServerData.pathArchive" class="p-inputtext-sm input-with-line" placeholder="Enter Path Archive" />
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="edit_regionId">Select Region</label>
+                            <Dropdown id="edit_regionId" v-model="editServerData.regionId" :options="regions" optionLabel="nameRegion" optionValue="idRegion" filter filterPlaceholder="Search..." class="custom-dropdown p-dropdown-sm" />
+                        </div>
                     </div>
                 </div>
 
-                <!-- Sección de Inputs (columna derecha) -->
-                <div class="flex flex-col w-1/2 gap-4">
-                    <div class="flex flex-col gap-2">
-                        <label for="edit_pathArchive">Path Archive</label>
-                        <InputText id="edit_pathArchive" type="text" v-model="editServerData.pathArchive" class="p-inputtext-sm input-with-line" placeholder="Enter Path Archive" />
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label for="edit_regionId">Select Region</label>
-                        <Dropdown id="edit_regionId" v-model="editServerData.regionId" :options="regions" optionLabel="nameRegion" optionValue="idRegion" filter filterPlaceholder="Search..." class="custom-dropdown p-dropdown-sm" />
-                    </div>
+                <!-- Sección de Botones -->
+                <div class="flex gap-4 mt-4">
+                    <Button type="submit" label="Save" class="p-button-primary" />
                 </div>
-            </div>
-
-            <!-- Sección de Botones -->
-            <div class="flex gap-4 mt-4">
-                <Button type="submit" label="Save" class="p-button-primary" />
-            </div>
-        </form>
-    </Dialog>
+            </form>
+        </Dialog>
 
         <!-- Diálogo de detalle de agent -->
         <Dialog v-model:visible="isShowDialogVisible" header="Agent Details" modal :style="{ 'max-width': '30vw', width: '30vw' }">
@@ -338,42 +365,41 @@ export default {
 
         <!-- Diálogo de creación de servidor -->
         <Dialog header="Create Server" v-model:visible="isCreateServerDialogVisible" modal :style="{ 'max-width': '30vw', width: '30vw' }">
-    <form @submit.prevent="createServer">
-        <div class="flex gap-4">
-            <!-- Inputs columna izquierda -->
-            <div class="flex flex-col w-1/2 gap-4">
-                <div class="flex flex-col gap-2">
-                    <label for="create_serverName">Server Name</label>
-                    <InputText id="create_serverName" v-model="newServer.agentName" class="p-inputtext-sm" placeholder="Enter Server Name" />
+            <form @submit.prevent="createServer">
+                <div class="flex gap-4">
+                    <!-- Inputs columna izquierda -->
+                    <div class="flex flex-col w-1/2 gap-4">
+                        <div class="flex flex-col gap-2">
+                            <label for="create_serverName">Server Name</label>
+                            <InputText id="create_serverName" v-model="newServer.agentName" class="p-inputtext-sm" placeholder="Enter Server Name" />
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="create_ipAgent">IP Address</label>
+                            <InputText id="create_ipAgent" v-model="newServer.ipAgent" class="p-inputtext-sm" placeholder="Enter IP Address" />
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="create_webServiceUrl">Web Service URL</label>
+                            <InputText id="create_webServiceUrl" v-model="newServer.webServiceUrl" class="p-inputtext-sm" placeholder="Enter Web Service URL" />
+                        </div>
+                    </div>
+                    <!-- Inputs columna derecha -->
+                    <div class="flex flex-col w-1/2 gap-4">
+                        <div class="flex flex-col gap-2">
+                            <label for="create_pathArchive">Path Archive</label>
+                            <InputText id="create_pathArchive" v-model="newServer.pathArchive" class="p-inputtext-sm" placeholder="Enter Path Archive" />
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="create_regionId">Select Region</label>
+                            <Dropdown id="create_regionId" v-model="newServer.regionId" :options="regions" optionLabel="nameRegion" optionValue="idRegion" filter filterPlaceholder="Search..." class="custom-dropdown p-dropdown-sm" />
+                        </div>
+                    </div>
                 </div>
-                <div class="flex flex-col gap-2">
-                    <label for="create_ipAgent">IP Address</label>
-                    <InputText id="create_ipAgent" v-model="newServer.ipAgent" class="p-inputtext-sm" placeholder="Enter IP Address" />
+                <div class="flex justify-end mt-4">
+                    <Button label="Cancel" class="p-button-text" @click="closeCreateServerDialog" />
+                    <Button label="Create" type="submit" class="p-button-success" />
                 </div>
-                <div class="flex flex-col gap-2">
-                    <label for="create_webServiceUrl">Web Service URL</label>
-                    <InputText id="create_webServiceUrl" v-model="newServer.webServiceUrl" class="p-inputtext-sm" placeholder="Enter Web Service URL" />
-                </div>
-            </div>
-            <!-- Inputs columna derecha -->
-            <div class="flex flex-col w-1/2 gap-4">
-                <div class="flex flex-col gap-2">
-                    <label for="create_pathArchive">Path Archive</label>
-                    <InputText id="create_pathArchive" v-model="newServer.pathArchive" class="p-inputtext-sm" placeholder="Enter Path Archive" />
-                </div>
-                <div class="flex flex-col gap-2">
-                    <label for="create_regionId">Select Region</label>
-                    <Dropdown id="create_regionId" v-model="newServer.regionId" :options="regions" optionLabel="nameRegion" optionValue="idRegion" filter filterPlaceholder="Search..." class="custom-dropdown p-dropdown-sm" />
-                </div>
-            </div>
-        </div>
-        <div class="flex justify-end mt-4">
-            <Button label="Cancel" class="p-button-text" @click="closeCreateServerDialog" />
-            <Button label="Create" type="submit" class="p-button-success" />
-        </div>
-    </form>
-</Dialog>
-
+            </form>
+        </Dialog>
 
         <!-- Diálogo de confirmación borrar -->
         <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
@@ -441,5 +467,4 @@ export default {
 .p-dropdown .p-dropdown-items {
     font-size: 0.875rem; /* Tamaño de fuente de las opciones */
 }
-
 </style>
