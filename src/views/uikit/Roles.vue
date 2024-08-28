@@ -183,7 +183,7 @@ export default {
                 <div class="flex justify-between items-center mb-2">
                     <!-- Agrupar los dos botones en un div con clase flex -->
                     <div class="flex gap-2">
-                        <Button label="Create User" icon="pi pi-plus" @click="openCreateRoleDialog" class="p-button-success" />
+                        <Button label="Create Role" icon="pi pi-plus" @click="openCreateRoleDialog" class="p-button-success" />
                         <Button label="Filter All" icon="pi pi-filter" class="p-button-secondary" @click="toggleFilter" />
                     </div>
                     <!-- Input de búsqueda al otro lado -->
@@ -216,48 +216,51 @@ export default {
         </div>
 
         <!-- Diálogo de creación de rol -->
-        <Dialog v-model:visible="isCreateRoleDialogVisible" header="Create Role" modal :style="{ 'max-width': '20vw', width: '20vw' }">
-            <form @submit.prevent="registerRole">
-                <div class="flex flex-col gap-4">
-                    <div class="flex flex-col gap-2">
-                        <label for="nameCreate">Name</label>
-                        <InputText id="nameCreate" type="text" v-model="role.authority" class="p-inputtext-sm input-with-line" placeholder="Enter Role Name" required />
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label for="descriptionCreate">Description</label>
-                        <InputText id="descriptionCreate" type="text" v-model="role.description" class="p-inputtext-sm input-with-line" placeholder="Enter Role Description" required />
-                    </div>
+        <Dialog v-model:visible="isCreateRoleDialogVisible" modal header="Create Role">
+    <form @submit.prevent="registerRole">
+        <div class="flex gap-4">
+            <div class="flex flex-wrap gap-4">
+                <div class="flex flex-col grow basis-0 gap-2">
+                    <label for="nameCreate">Name</label>
+                    <InputText id="nameCreate" type="text" v-model="role.authority" class="p-inputtext-sm input-with-line" placeholder="Enter Role Name" required />
                 </div>
-                <Button type="submit" label="Create" class="p-button-primary mt-3" />
-            </form>
-        </Dialog>
-    
+                <div class="flex flex-col grow basis-0 gap-2">
+                    <label for="descriptionCreate">Description</label>
+                    <InputText id="descriptionCreate" type="text" v-model="role.description" class="p-inputtext-sm input-with-line" placeholder="Enter Role Description" required />
+                </div>
+            </div>
+        </div>
+        <Button type="submit" label="Create" class="p-button-primary mt-3" />
+    </form>
+</Dialog>
 
 
 
         <!-- Diálogo de edición de rol -->
-        <Dialog v-model:visible="isEditDialogVisible" header="Edit Role" modal :style="{ 'max-width': '20vw', width: '20vw' }">
-            <form @submit.prevent="updateRole">
-                <div class="flex flex-col gap-4">
-                    <div class="flex flex-col gap-2">
-                        <label for="nameEdit">Name</label>
-                        <InputText id="nameEdit" type="text" v-model="editRoleData.authority" class="p-inputtext-sm input-with-line" placeholder="Enter Role Name" required />
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label for="descriptionEdit">Description</label>
-                        <InputText id="descriptionEdit" type="text" v-model="editRoleData.description" class="p-inputtext-sm input-with-line" placeholder="Enter Role Description" required />
-                    </div>
+        <Dialog v-model:visible="isEditDialogVisible" modal header="Edit Role">
+    <form @submit.prevent="updateRole">
+        <div class="flex gap-4">
+            <div class="flex flex-wrap gap-4">
+                <div class="flex flex-col grow basis-0 gap-2">
+                    <label for="nameEdit">Name</label>
+                    <InputText id="nameEdit" type="text" v-model="editRoleData.authority" class="p-inputtext-sm input-with-line" placeholder="Enter Role Name" required />
                 </div>
-                <Button type="submit" label="Save" class="p-button-primary mt-3" />
-            </form>
-        </Dialog>
+                <div class="flex flex-col grow basis-0 gap-2">
+                    <label for="descriptionEdit">Description</label>
+                    <InputText id="descriptionEdit" type="text" v-model="editRoleData.description" class="p-inputtext-sm input-with-line" placeholder="Enter Role Description" required />
+                </div>
+            </div>
+        </div>
+        <Button type="submit" label="Save" class="p-button-primary mt-3" />
+    </form>
+</Dialog>
     
 
 
 
         <!-- Diálogo de confirmación borrar -->
         <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
-            <p>Are you sure you want to delete this user?</p>
+            <p>Are you sure you want to delete this role?</p>
             <template #footer>
                 <div class="flex justify-end gap-2">
                     <Button label="No" icon="pi pi-times" @click="closeDeleteConfirmation" class="p-button-text p-button-secondary" />

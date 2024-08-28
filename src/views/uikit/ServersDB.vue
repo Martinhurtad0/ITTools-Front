@@ -352,7 +352,7 @@ export default {
                 <div class="font-semibold text-xl">Servers</div>
                 <div class="flex justify-between items-center mb-2">
                     <div class="flex gap-2">
-                        <Button label="Create Serve" icon="pi pi-plus" @click="openCreateModal" class="p-button-success" />
+                        <Button label="Create Server" icon="pi pi-plus" @click="openCreateModal" class="p-button-success" />
                         <Button label="Filter All" icon="pi pi-filter" class="p-button-secondary" @click="toggleFilter" />
                     </div>
                     <InputText v-model="globalFilter" placeholder="Global search..." class="p-inputtext p-component" />
@@ -424,7 +424,7 @@ export default {
         <!-- Diálogo de confirmación borrar -->
 
         <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
-            <p>Are you sure you want to delete this user?</p>
+            <p>Are you sure you want to delete this server?</p>
             <template #footer>
                 <div class="flex justify-end gap-2">
                     <Button label="No" icon="pi pi-times" @click="closeDeleteConfirmation" class="p-button-text p-button-secondary" />

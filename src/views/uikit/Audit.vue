@@ -75,7 +75,7 @@ export default {
 
         <!-- Contenedor de búsqueda alineado a la derecha -->
         <div class="flex justify-between items-center mb-2">
-          <InputText v-model="searchQuery" placeholder="Search..." class="p-inputtext p-component" />
+          <InputText v-model="searchQuery" placeholder="Global search..." class="p-inputtext p-component" />
         </div>
        
         <DataTable :value="filteredAudits" class="p-datatable-sm" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="audits.length" sortMode="multiple">

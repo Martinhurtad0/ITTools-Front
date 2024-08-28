@@ -21,7 +21,7 @@ const routes = [
                 meta: { requiresAuth: true }
             },
             {
-                path: '/uikit/users',
+                path: '/uikit/Users',
                 name: 'formlayout',
                 component: () => import('@/views/uikit/Users.vue'),
                 meta: { requiresAuth: true }
@@ -59,6 +59,30 @@ const routes = [
                 path: '/uikit/Audit',
                 name: 'Audit',
                 component: () => import('@/views/uikit/Audit.vue'),
+                meta: { requiresAuth: true }
+            },
+            {
+                path: '/uikit/FindLog',
+                name: 'FindLog',
+                component: () => import('@/views/uikit/FindLog.vue'),
+                meta: { requiresAuth: true }
+            },
+            {
+                path: '/uikit/FindLogTran',
+                name: 'FindLogTran',
+                component: () => import('@/views/uikit/FindLogTran.vue'),
+                meta: { requiresAuth: true }
+            },
+            {
+                path: '/uikit/LogTran',
+                name: 'LogTran',
+                component: () => import('@/views/uikit/LogTran.vue'),
+                meta: { requiresAuth: true }
+            },
+            {
+                path: '/uikit/ArchiveLog',
+                name: 'ArchiveLog',
+                component: () => import('@/views/uikit/ArchiveLog.vue'),
                 meta: { requiresAuth: true }
             },
         ]

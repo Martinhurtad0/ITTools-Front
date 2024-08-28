@@ -148,7 +148,7 @@ export default {
                 await serverService.updateServer(this.editServerData);
                 await this.fetchServers();
                 this.isEditDialogVisible = false;
-                this.showSuccess('Server updated successfully');
+                this.showSuccess('Agent updated successfully');
             } catch (error) {
                 console.error('Error updating server:', error);
                 this.showError('Update failed');
@@ -193,7 +193,7 @@ export default {
                 await serverService.updateServerStatus(server.idAgent);
                 server.status = updatedStatus;
                 await this.fetchServers();
-                this.showSuccess('Server status updated successfully');
+                this.showSuccess('Agent status updated successfully');
             } catch (error) {
                 console.error('Error updating server status:', error.message);
                 this.showError('Failed to update server status');
@@ -225,7 +225,7 @@ export default {
                     regionId: this.newServer.regionId ? Number(this.newServer.regionId) : null
                 };
                 await serverService.createServer(serverData);
-                this.showSuccess('Server created successfully');
+                this.showSuccess('Agent created successfully');
                 this.resetNewServerForm();
                 await this.fetchServers();
                 this.closeCreateServerDialog();
@@ -307,7 +307,7 @@ export default {
 
         <!-- Modal de edición de servidor -->
 
-        <Dialog header="Edit Server" v-model:visible="isEditDialogVisible" modal :style="{ 'max-width': '30vw', width: '30vw' }">
+        <Dialog header="Edit Agent" v-model:visible="isEditDialogVisible" modal :style="{ 'max-width': '30vw', width: '30vw' }">
             <form @submit.prevent="updateServer">
                 <div class="flex gap-4">
                     <!-- Sección de Inputs (columna izquierda) -->
@@ -357,36 +357,36 @@ export default {
                 <div>
                     <strong>Status:</strong>
                     <span :class="detailServerData.status ? 'text-green-500' : 'text-red-500'">
-                        {{ detailServerData.status ? 'Active' : 'Inactive' }}
+                        {{ detailServerData.status ? ' Active' : ' Inactive' }}
                     </span>
                 </div>
             </div>
         </Dialog>
 
         <!-- Diálogo de creación de servidor -->
-        <Dialog header="Create Server" v-model:visible="isCreateServerDialogVisible" modal :style="{ 'max-width': '30vw', width: '30vw' }">
+        <Dialog header="Create Agent" v-model:visible="isCreateServerDialogVisible" modal :style="{ 'max-width': '30vw', width: '30vw' }">
             <form @submit.prevent="createServer">
                 <div class="flex gap-4">
                     <!-- Inputs columna izquierda -->
                     <div class="flex flex-col w-1/2 gap-4">
                         <div class="flex flex-col gap-2">
                             <label for="create_serverName">Server Name</label>
-                            <InputText id="create_serverName" v-model="newServer.agentName" class="p-inputtext-sm" placeholder="Enter Server Name" />
+                            <InputText id="create_serverName" v-model="newServer.agentName" class="p-inputtext-sm input-with-line" placeholder="Enter Server Name" />
                         </div>
                         <div class="flex flex-col gap-2">
                             <label for="create_ipAgent">IP Address</label>
-                            <InputText id="create_ipAgent" v-model="newServer.ipAgent" class="p-inputtext-sm" placeholder="Enter IP Address" />
+                            <InputText id="create_ipAgent" v-model="newServer.ipAgent" class="p-inputtext-sm input-with-line" placeholder="Enter IP Address" />
                         </div>
                         <div class="flex flex-col gap-2">
                             <label for="create_webServiceUrl">Web Service URL</label>
-                            <InputText id="create_webServiceUrl" v-model="newServer.webServiceUrl" class="p-inputtext-sm" placeholder="Enter Web Service URL" />
+                            <InputText id="create_webServiceUrl" v-model="newServer.webServiceUrl" class="p-inputtext-sm input-with-line" placeholder="Enter Web Service URL" />
                         </div>
                     </div>
                     <!-- Inputs columna derecha -->
                     <div class="flex flex-col w-1/2 gap-4">
                         <div class="flex flex-col gap-2">
                             <label for="create_pathArchive">Path Archive</label>
-                            <InputText id="create_pathArchive" v-model="newServer.pathArchive" class="p-inputtext-sm" placeholder="Enter Path Archive" />
+                            <InputText id="create_pathArchive" v-model="newServer.pathArchive"class="p-inputtext-sm input-with-line" placeholder="Enter Path Archive" />
                         </div>
                         <div class="flex flex-col gap-2">
                             <label for="create_regionId">Select Region</label>
@@ -403,7 +403,7 @@ export default {
 
         <!-- Diálogo de confirmación borrar -->
         <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
-            <p>Are you sure you want to delete this user?</p>
+            <p>Are you sure you want to delete this agent?</p>
             <template #footer>
                 <div class="flex justify-end gap-2">
                     <Button label="No" icon="pi pi-times" @click="closeDeleteConfirmation" class="p-button-text p-button-secondary" />

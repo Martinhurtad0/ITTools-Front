@@ -343,3 +343,19 @@ export default {
         </div>
    
 </template>
+
+<style scoped>
+.input-with-line {
+    border: none;
+    border-bottom: 1px solid #d1d5db; /* Línea de color gris claro */
+    padding: 0.5rem 0.4rem; /* Ajustar el padding vertical */
+    background: transparent; /* Fondo transparente */
+    outline: none; /* Eliminar el borde de enfoque predeterminado */
+    box-shadow: none; /* Eliminar la sombra del campo de entrada */
+}
+
+/* Opcional: para añadir algo de espacio debajo del input */
+.input-with-line {
+    margin-bottom: 0.5rem; /* Espacio debajo del campo de entrada */
+}
+</style>
