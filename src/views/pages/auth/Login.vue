@@ -4,6 +4,7 @@ import { ref } from 'vue';
 import { authService } from '@/services/AuthService';
 import { useRouter } from 'vue-router';
 import { GoogleLogin } from 'vue3-google-login';
+import logo from '@/assets/emida-logo-square.png'; // Importa la imagen
 
 const email = ref('');
 const password = ref('');
@@ -39,46 +40,55 @@ const callback = async (response) => {
 };
 </script>
 
+
 <template>
   <FloatingConfigurator />
   <div class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-[100vw] overflow-hidden">
     <div class="flex flex-col items-center justify-center">
-      <div style="border-radius: 56px; padding: 0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%)">
-        <div class="w-full bg-surface-0 dark:bg-surface-900 py-20 px-8 sm:px-20" style="border-radius: 53px">
-          <div class="text-center mb-8">
-            <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Welcome to ITTools</div>
-            <span class="text-muted-color font-medium">Sign in to continue</span>
+      <div
+        class="rounded-[56px] p-[0.3rem]"
+        style="background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%)"
+      >
+        <div class="w-full bg-surface-0 dark:bg-surface-900 py-16 px-8 sm:px-20 rounded-[53px]">
+          <div class="text-center flex flex-col items-center">
+          
+            
+            <!-- Imagen sin margen adicional -->
+            <img :src="logo" alt="Logo" width="130px" id="img"/>
+  <!-- Título -->
+  <div class="text-surface-900 dark:text-surface-0 text-3xl mb-8 font-medium">Welcome to ITTools</div>
+    
           </div>
+
           <!-- Formulario de inicio de sesión -->
-          <form @submit.prevent="handleLogin" class="flex flex-col items-center">
+          <form @submit.prevent="handleLogin" class="flex flex-col items-center" id="form">
             <div class="w-full">
               <!-- Campo de email -->
               <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Email</label>
-              <InputText 
-                id="email1" 
-                type="text" 
-                placeholder="Email address" 
-                class="w-full md:w-[30rem] mb-4" 
-                v-model="email" 
+              <InputText
+                id="email1"
+                type="text"
+                placeholder="Email address"
+                class="w-full md:w-[30rem] mb-4"
+                v-model="email"
               />
 
               <!-- Campo de contraseña -->
               <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Password</label>
-              <Password 
-                id="password1" 
-                v-model="password" 
-                placeholder="Password" 
-                :toggleMask="true" 
-                class="mb-4" 
-                fluid 
-                :feedback="false" 
+              <Password
+                id="password1"
+                v-model="password"
+                placeholder="Password"
+                :toggleMask="true"
+                class="mb-4"
+                fluid
+                :feedback="false"
               />
 
-
               <!-- Botón de inicio de sesión -->
-              <Button 
-                label="Sign In" 
-                type="submit" 
+              <Button
+                label="Sign In"
+                type="submit"
                 class="w-full mb-4"
               />
             </div>
@@ -86,13 +96,11 @@ const callback = async (response) => {
 
           <!-- Sección para inicio de sesión con Google -->
           <div class="flex flex-col items-center">
-            <div>
-              <GoogleLogin 
-                :callback="callback" 
-                auto-login 
-                class="mt-4" 
-              />
-            </div>
+            <GoogleLogin
+              :callback="callback"
+              auto-login
+              class="mt-4"
+            />
           </div>
         </div>
       </div>
@@ -123,4 +131,10 @@ const callback = async (response) => {
 .btn-primary {
   background-color: var(--primary-color);
 }
+
+#img{
+  margin-top: -4rem;
+  margin-bottom: -2rem;
+}
+
 </style>

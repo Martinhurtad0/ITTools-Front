@@ -68,46 +68,30 @@ export default {
 </script>
 
 <template>
-     <div class="flex flex-col h-screen p-4">
+    <div class="flex flex-col h-screen p-4">
         <div class="flex gap-6">
             <!-- Div para la primera mitad -->
             <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
                 <div class="mb-6">
                     <div class="font-semibold text-xl mb-4">Region Details</div>
                     <label for="region" class="block text-sm font-medium mb-2">Region</label>
-                    <Dropdown 
-                        id="region" 
-                        v-model="selectedRegion" 
-                        :options="regions" 
-                        option-label="name" 
-                        option-value="id" 
-                        placeholder="Select Region" 
-                        class="w-full" 
-                        filter 
-                        filterPlaceholder="Search Region" 
-                    />
+                    <Dropdown id="region" v-model="selectedRegion" :options="regions" option-label="name" option-value="id" placeholder="Select Region" class="w-full" filter filterPlaceholder="Search Region" />
                 </div>
 
                 <div class="mb-6">
                     <label for="last-modified" class="block text-sm font-medium mb-2">Last Modified</label>
-                    <input 
-                        id="last-modified" 
-                        type="date" 
-                        class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 date-input" 
-                    />
+                    <input id="last-modified" type="date" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 date-input" />
                 </div>
 
                 <div class="mb-6">
-                    <label class="block text-sm font-medium mb-2">Agents</label>
+                    <label class="block text-sm font-medium mb-3">Agents</label>
                     <div class="flex flex-col gap-2">
                         <div v-for="agent in filteredAgents" :key="agent.idAgent" class="flex items-center">
                             <div class="flex items-center gap-2 radio-margin">
-                                <RadioButton 
-                                    v-model="selectedAgent" 
-                                    :value="agent.idAgent" 
-                                    name="agent" 
-                                />
-                                <span class="text-sm">{{ agent.agentName || agent.name || agent.fullName }}</span>
+                                <RadioButton v-model="selectedAgent" :value="agent.idAgent" name="agent" />
+                                <span class="text-sm">{{ agent.agentName }}</span>
+                                <span class="text-sm">||</span>
+                                <span class="text-sm">{{ agent.ipAgent }}</span>
                             </div>
                         </div>
                         <div v-if="filteredAgents.length === 0" class="text-sm text-gray-500 mt-2">No agents found for the selected region</div>
@@ -119,17 +103,12 @@ export default {
             <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
                 <div class="font-semibold text-xl mb-4">Log Files</div>
                 <div>
-                    <Button 
-                        label="Send" 
-                        class="w-full p-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                    />
+                    <Button label="Send" class="w-full p-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
             </div>
         </div>
     </div>
 </template>
-
-
 
 <style scoped>
 /* Asegurar que el input de fecha tenga el mismo tamaño que el InputText */

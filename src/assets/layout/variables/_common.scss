@@ -1,8 +1,9 @@
 :root {
-    --primary-color: var(--p-primary-color);
-    --primary-contrast-color: var(--p-primary-contrast-color);
+    --primary-color: teal; // Color primario por defecto
+    --primary-contrast-color: #ffffff; // Ajusta según contraste necesario
     --text-color: var(--p-text-color);
     --text-color-secondary: var(--p-text-muted-color);
+    --surface-ground: var(--surface-color, soho); // Surface por defecto 'soho'
     --surface-border: var(--p-content-border-color);
     --surface-card: var(--p-content-background);
     --surface-hover: var(--p-content-hover-background);

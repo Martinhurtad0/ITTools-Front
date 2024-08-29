@@ -98,16 +98,14 @@ export default {
                 </div>
 
                 <div class="mb-6">
-                    <label class="block text-sm font-medium mb-2">Agents</label>
+                    <label class="block text-sm font-medium mb-3">Agents</label>
                     <div class="flex flex-col gap-2">
                         <div v-for="agent in filteredAgents" :key="agent.idAgent" class="flex items-center">
                             <div class="flex items-center gap-2 radio-margin">
-                                <RadioButton 
-                                    v-model="selectedAgent" 
-                                    :value="agent.idAgent" 
-                                    name="agent" 
-                                />
-                                <span class="text-sm">{{ agent.agentName || agent.name || agent.fullName }}</span>
+                                <RadioButton v-model="selectedAgent" :value="agent.idAgent" name="agent" />
+                                <span class="text-sm">{{ agent.agentName }}</span>
+                                <span class="text-sm">||</span>
+                                <span class="text-sm">{{ agent.ipAgent }}</span>
                             </div>
                         </div>
                         <div v-if="filteredAgents.length === 0" class="text-sm text-gray-500 mt-2">No agents found for the selected region</div>

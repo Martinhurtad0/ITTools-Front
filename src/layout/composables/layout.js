@@ -1,9 +1,10 @@
 import { computed, reactive, readonly, onMounted } from 'vue';
 
+// Configuración inicial del layout
 const layoutConfig = reactive({
     preset: 'Aura',
-    primary: 'teal', // Primary por defecto
-    surface: 'soho', // Surface por defecto
+    primary: 'teal', 
+    surface: 'soho',
     darkTheme: false,
     menuMode: 'static'
 });
@@ -19,28 +20,47 @@ const layoutState = reactive({
 });
 
 export function useLayout() {
+    // Función para aplicar colores al DOM
+    const applyColors = () => {
+        document.documentElement.style.setProperty('--primary-color', layoutConfig.primary);
+        document.documentElement.style.setProperty('--surface-color', layoutConfig.surface);
+    };
+
     onMounted(() => {
+        // Recuperar el modo oscuro del almacenamiento local
         const savedDarkMode = localStorage.getItem('darkTheme');
         if (savedDarkMode === 'true') {
             layoutConfig.darkTheme = true;
             document.documentElement.classList.add('app-dark');
         }
 
-        // Asegurar que los colores predeterminados estén configurados
-        if (!layoutConfig.primary) {
-            layoutConfig.primary = 'teal';
+        // Recuperar los valores de primary y surface desde el localStorage
+        const savedPrimary = localStorage.getItem('primary');
+        if (savedPrimary) {
+            layoutConfig.primary = savedPrimary;
         }
-        if (!layoutConfig.surface) {
-            layoutConfig.surface = 'soho'; // Configuración predeterminada de surface
+
+        const savedSurface = localStorage.getItem('surface');
+        if (savedSurface) {
+            layoutConfig.surface = savedSurface;
         }
+
+        // Aplicar colores al montar el componente
+        applyColors();
     });
 
+    // Guardar y cambiar el color primario
     const setPrimary = (value) => {
         layoutConfig.primary = value || 'teal';
+        localStorage.setItem('primary', layoutConfig.primary); // Guardar en localStorage
+        applyColors(); // Aplicar colores
     };
 
+    // Guardar y cambiar el surface
     const setSurface = (value) => {
         layoutConfig.surface = value || 'soho';
+        localStorage.setItem('surface', layoutConfig.surface); // Guardar en localStorage
+        applyColors(); // Aplicar colores
     };
 
     const setPreset = (value) => {

@@ -36,11 +36,6 @@ const model = ref([
         ]
     },
     {
-        label: 'Audit',
-        icon: 'pi pi-fw pi-chart-line', // Icono actualizado para Audit
-        to: '/uikit/Audit'
-    },
-    {
         label: 'Logs',
         icon: 'pi pi-fw pi-folder', // Icono actualizado para Logs
         items: [
@@ -49,7 +44,12 @@ const model = ref([
             { label: 'Find in a log file', icon: 'pi pi-fw pi-search-plus', to: '/uikit/FindLog' },
             { label: 'Archive logs', icon: 'pi pi-fw pi-clock', to: '/uikit/ArchiveLog' }
         ]
-    }
+    },
+    {
+        label: 'Audit',
+        icon: 'pi pi-fw pi-chart-line', // Icono actualizado para Audit
+        to: '/uikit/Audit'
+    },
 ]);
 </script>
 

@@ -267,7 +267,7 @@ export default {
         <!-- Sección de creación de servidor -->
         <div>
             <!-- Modal -->
-            <Dialog header="Create Server" v-model:visible="showCreateModal" modal @hide="closeCreateModal" style="width: 70vw; max-width: auto; height: auto; max-height: 90vw" class="custom-dialog">
+            <Dialog header="Create Server" v-model:visible="showCreateModal" modal @hide="closeCreateModal" style="width: 70vw; max-width: auto; height: auto; max-height: auto" class="custom-dialog">
                 <form @submit.prevent="createServer">
                     <!-- Contenedor principal en grid -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
