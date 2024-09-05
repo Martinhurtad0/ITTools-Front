@@ -56,14 +56,14 @@ export default {
             serverToDelete: null,
             server: {
                 agentName: '',
-                ipAgent: '',
+                ipagent: '',
                 webServiceUrl: '',
                 pathArchive: '',
                 regionId: null
             },
             newServer: {
                 agentName: '',
-                ipAgent: '',
+                ipagent: '',
                 webServiceUrl: '',
                 pathArchive: '',
                 regionId: null
@@ -71,14 +71,14 @@ export default {
             editServerData: {
                 idAgent: null,
                 agentName: '',
-                ipAgent: '',
+                ipagent: '',
                 webServiceUrl: '',
                 pathArchive: '',
                 regionId: null
             },
             detailServerData: {
                 agentName: '',
-                ipAgent: '',
+                ipagent: '',
                 webServiceUrl: '',
                 pathArchive: '',
                 regionId: null
@@ -118,7 +118,7 @@ export default {
         applyFilters() {
             this.filteredServers = this.servers.filter((server) => {
                 const globalFilter = this.searchQuery.toLowerCase();
-                const matchesSearch = !globalFilter || server.agentName.toLowerCase().includes(globalFilter) || server.ipAgent.toLowerCase().includes(globalFilter) || server.webServiceUrl.toLowerCase().includes(globalFilter);
+                const matchesSearch = !globalFilter || server.agentName.toLowerCase().includes(globalFilter) || server.ipagent.toLowerCase().includes(globalFilter) || server.webServiceUrl.toLowerCase().includes(globalFilter);
                 const matchesActiveFilter = this.showAll || server.status === 1;
                 return matchesSearch && matchesActiveFilter;
             });
@@ -150,8 +150,7 @@ export default {
                 this.isEditDialogVisible = false;
                 this.showSuccess('Agent updated successfully');
             } catch (error) {
-                console.error('Error updating server:', error);
-                this.showError('Update failed');
+                this.showError(error.message || 'Update failed');
             }
         },
         async deleteAgent() {
@@ -212,14 +211,14 @@ export default {
             }
         },
         async createServer() {
-            if (!this.validateIP(this.newServer.ipAgent)) {
+            if (!this.validateIP(this.newServer.ipagent)) {
                 this.showError('Invalid IP address');
                 return;
             }
             try {
                 const serverData = {
                     agentName: this.newServer.agentName,
-                    ipAgent: this.newServer.ipAgent,
+                    ipagent: this.newServer.ipagent,
                     webServiceUrl: this.newServer.webServiceUrl,
                     pathArchive: this.newServer.pathArchive,
                     regionId: this.newServer.regionId ? Number(this.newServer.regionId) : null
@@ -229,15 +228,14 @@ export default {
                 this.resetNewServerForm();
                 await this.fetchServers();
                 this.closeCreateServerDialog();
-            } catch (err) {
-                console.error('Error creating server:', err.message);
-                this.showError(err.message || 'Creation failed');
+            } catch (error) {
+                this.showError(error.message || 'Registration failed');
             }
         },
         resetNewServerForm() {
             this.newServer = {
                 agentName: '',
-                ipAgent: '',
+                ipagent: '',
                 webServiceUrl: '',
                 pathArchive: '',
                 regionId: null
@@ -247,8 +245,8 @@ export default {
             this.isCreateServerDialogVisible = false;
         },
         validateIP(ip) {
-            const ipAgent = /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$/;
-            return ipAgent.test(ip);
+            const ipagent = /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$/;
+            return ipagent.test(ip);
         }
     }
 };
@@ -263,8 +261,8 @@ export default {
                 <div class="flex justify-between items-center mb-2">
                     <!-- Agrupar los dos botones en un div con clase flex -->
                     <div class="flex gap-2">
-                        <Button label="Create Agents" icon="pi pi-plus" @click="openCreateServerDialog" class="p-button-success" />
-                        <Button label="Filter All" icon="pi pi-filter" class="p-button-secondary" @click="toggleFilter" />
+                        <Button label="Create User" icon="pi pi-plus" @click="openCreateServerDialog" />
+                        <Button label="Filter All" icon="pi pi-filter" class="p-button-secondary" @click="toggleFilter" style="background-color: rgb(104, 76, 84); border-color: rgb(104, 76, 84); color: white" />
                     </div>
                     <!-- Input de búsqueda al otro lado -->
                     <InputText v-model="searchQuery" placeholder="Global search..." class="p-inputtext p-component" />
@@ -272,7 +270,7 @@ export default {
                 <div class="overflow-x-auto">
                     <DataTable :value="filteredServers" class="p-datatable-sm" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="servers.length" sortMode="multiple">
                         <Column field="agentName" header="Server Name" sortable />
-                        <Column field="ipAgent" header="IP Agent" sortable />
+                        <Column field="ipagent" header="IP Agent" sortable />
                         <Column field="webServiceUrl" header="WebService URL" sortable />
                         <Column field="pathArchive" header="Path Archive" sortable />
 
@@ -317,8 +315,8 @@ export default {
                             <InputText id="edit_serverName" type="text" v-model="editServerData.agentName" class="p-inputtext-sm input-with-line" placeholder="Enter Server Name" />
                         </div>
                         <div class="flex flex-col gap-2">
-                            <label for="edit_ipAgent">IP Address</label>
-                            <InputText id="edit_ipAgent" type="text" v-model="editServerData.ipAgent" class="p-inputtext-sm input-with-line" placeholder="Enter IP Address" />
+                            <label for="edit_ipagent">IP Address</label>
+                            <InputText id="edit_ipagent" type="text" v-model="editServerData.ipagent" class="p-inputtext-sm input-with-line" placeholder="Enter IP Address" />
                         </div>
                         <div class="flex flex-col gap-2">
                             <label for="edit_webServiceUrl">Web Service URL</label>
@@ -339,10 +337,10 @@ export default {
                     </div>
                 </div>
 
-                <!-- Sección de Botones -->
-                <div class="flex gap-4 mt-4">
-                    <Button type="submit" label="Save" class="p-button-primary" />
-                </div>
+                  <!-- Contenedor para alinear el botón al final -->
+        <div class="flex justify-end mt-4">
+            <Button type="submit" label="Save" class="p-button-primary" />
+        </div>
             </form>
         </Dialog>
 
@@ -350,7 +348,7 @@ export default {
         <Dialog v-model:visible="isShowDialogVisible" header="Agent Details" modal :style="{ 'max-width': '30vw', width: '30vw' }">
             <div class="flex flex-col gap-4">
                 <div><strong>Servername:</strong> {{ detailServerData.agentName }}</div>
-                <div><strong>IP Address:</strong> {{ detailServerData.ipAgent }}</div>
+                <div><strong>IP Address:</strong> {{ detailServerData.ipagent }}</div>
                 <div><strong>Web Service URL:</strong> {{ detailServerData.webServiceUrl }}</div>
                 <div><strong>Archive Path:</strong> {{ detailServerData.pathArchive }}</div>
                 <div><strong>Region:</strong> {{ getRegionNameById(detailServerData.regionId) }}</div>
@@ -374,8 +372,8 @@ export default {
                             <InputText id="create_serverName" v-model="newServer.agentName" class="p-inputtext-sm input-with-line" placeholder="Enter Server Name" />
                         </div>
                         <div class="flex flex-col gap-2">
-                            <label for="create_ipAgent">IP Address</label>
-                            <InputText id="create_ipAgent" v-model="newServer.ipAgent" class="p-inputtext-sm input-with-line" placeholder="Enter IP Address" />
+                            <label for="create_ipagent">IP Address</label>
+                            <InputText id="create_ipagent" v-model="newServer.ipagent" class="p-inputtext-sm input-with-line" placeholder="Enter IP Address" />
                         </div>
                         <div class="flex flex-col gap-2">
                             <label for="create_webServiceUrl">Web Service URL</label>
@@ -395,7 +393,6 @@ export default {
                     </div>
                 </div>
                 <div class="flex justify-end mt-4">
-                    <Button label="Cancel" class="p-button-text" @click="closeCreateServerDialog" />
                     <Button label="Create" type="submit" class="p-button-success" />
                 </div>
             </form>

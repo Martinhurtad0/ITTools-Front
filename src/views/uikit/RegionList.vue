@@ -14,7 +14,7 @@ export default {
         Button,
         DataTable,
         Column,
-        Dialog,
+        Dialog
     },
     setup() {
         const toast = useToast();
@@ -30,7 +30,7 @@ export default {
         return {
             toast,
             showSuccess,
-            showError,
+            showError
         };
     },
     data() {
@@ -61,7 +61,7 @@ export default {
             detailRegionData: {},
             filterActiveOnly: true,
             displayDeleteConfirmation: false,
-            regionToDelete: null,
+            regionToDelete: null
         };
     },
     async created() {
@@ -86,11 +86,8 @@ export default {
                 this.resetForm();
                 this.isRegionDialogVisible = false; // Cerrar el diálogo después de la creación
             } catch (err) {
-                const errorMessage = err.response && err.response.status === 409
-                    ? err.response.data
-                    : err.message || 'Creation failed';
+                const errorMessage = err.response && err.response.status === 409 ? err.response.data : err.message || 'Creation failed';
                 this.showError(errorMessage);
-                this.isRegionDialogVisible = false; // Cerrar el diálogo
             }
         },
         resetForm() {
@@ -111,9 +108,14 @@ export default {
                 await this.loadRegions();
                 this.isEditDialogVisible = false;
             } catch (err) {
-                this.showError(err.message || 'Update failed');
+                if (err.response && err.response.status === 409) {
+                    this.showError(err.response.data || 'The region name already exists.');
+                } else {
+                    this.showError(err.message || 'Update failed');
+                }
             }
         },
+
         openConfirmation(region, isActivating) {
             this.regionToChangeStatus = region;
             this.isActivating = isActivating;
@@ -136,19 +138,22 @@ export default {
             try {
                 const response = await regionService.deleteRegion(this.regionToDelete.idRegion);
 
-                if (response.status === 409) { // Supongamos que el backend devuelve 409 si la región está en uso
-                    this.showError('Cannot delete region: it is currently assigned to a server or agent.');
+                if (response.status === 409) {
+                    // Muestra el mensaje del backend si está presente
+                    this.showError(response.data || 'Cannot delete region: it is currently assigned to a server or agent.');
                 } else {
                     this.showSuccess('Region deleted successfully');
-                    await this.loadRegions(); // Recargar las regiones para reflejar los cambios
-                    this.displayDeleteConfirmation = false; // Cerrar el diálogo de confirmación
-                    this.regionToDelete = null; // Limpiar la región a eliminar
+                    await this.loadRegions();
+                    this.displayDeleteConfirmation = false;
+                    this.regionToDelete = null;
                 }
             } catch (error) {
-                this.showError(error.response?.data || 'Deletion failed');
-                this.displayDeleteConfirmation = false; // Cerrar el diálogo de confirmación
+                // Muestra el mensaje del backend si está presente
+                this.showError(error.message || 'Deletion failed');
+                this.displayDeleteConfirmation = false;
             }
         },
+
         closeDeleteConfirmation() {
             this.displayDeleteConfirmation = false;
             this.regionToDelete = null;
@@ -165,7 +170,7 @@ export default {
 
             try {
                 await regionService.updateRegionStatus(this.regionToChangeStatus.idRegion, this.isActivating ? 1 : 0);
-                this.showSuccess(`Region ${this.isActivating ? 'activated' : 'deactivated'} successfully`);
+                this.showSuccess('Region status changed successfully');
                 await this.loadRegions();
                 this.displayConfirmation = false;
                 this.regionToChangeStatus = null;
@@ -178,7 +183,7 @@ export default {
             this.userToChangeStatus = null;
         },
         applyFilter() {
-            this.filteredRegions = this.regions.filter(region => {
+            this.filteredRegions = this.regions.filter((region) => {
                 const globalFilter = this.filters.global.value;
                 const isActive = this.filterActiveOnly ? region.status === 1 : true;
 
@@ -204,45 +209,23 @@ export default {
 };
 </script>
 
-
-
 <template>
-     <div class="flex flex-col h-screen p-4">
+    <div class="flex flex-col h-screen p-4">
         <div class="flex-2">
             <div class="card p-4 flex flex-col gap-4 h-full">
                 <div class="font-semibold text-xl">Regions</div>
                 <div class="flex justify-between items-center mb-2">
                     <div class="flex gap-2">
-                        <Button label="Create Region" icon="pi pi-plus" @click="openCreateRegionDialog" class="p-button-success" />
-                        <Button label="Filter All" icon="pi pi-filter" @click="toggleFilter" class="p-button-secondary" />
+                        <Button label="Create Region" icon="pi pi-plus" @click="openCreateRegionDialog" />
+                        <Button label="Filter All" icon="pi pi-filter" class="p-button-secondary" @click="toggleFilter" style="background-color: rgb(104, 76, 84); border-color: rgb(104, 76, 84); color: white" />
                     </div>
                     <InputText v-model="searchQuery" placeholder="Global search..." class="p-inputtext p-component" />
                 </div>
                 <div class="table-container">
-                    <DataTable 
-                        :value="filteredRegions" 
-                        class="p-datatable-sm" 
-                        :paginator="true" 
-                        :rows="10" 
-                        :rowsPerPageOptions="[5, 10, 20]" 
-                        :totalRecords="regions.length"
-                        sortMode="multiple"
-                    >
-                        <Column 
-                            field="nameRegion" 
-                            header="Name" 
-                            sortable 
-                        />
-                        <Column 
-                            field="description" 
-                            header="Description" 
-                            sortable 
-                        />
-                        <Column 
-                            field="status" 
-                            header="Status" 
-                            sortable
-                        >
+                    <DataTable :value="filteredRegions" class="p-datatable-sm" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="regions.length" sortMode="multiple">
+                        <Column field="nameRegion" header="Name" sortable />
+                        <Column field="description" header="Description" sortable />
+                        <Column field="status" header="Status" sortable>
                             <template #body="{ data }">
                                 <span :class="data.status ? 'text-green-500' : 'text-red-500'">
                                     {{ data.status ? 'Active' : 'Inactive' }}
@@ -265,8 +248,6 @@ export default {
                 </div>
             </div>
         </div>
-        
-      
 
         <!-- Diálogo de confirmación eliminar -->
         <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
@@ -278,9 +259,8 @@ export default {
                 </div>
             </template>
         </Dialog>
-   
-        
-      <Dialog v-model:visible="displayConfirmation" header="Confirmation" modal class="max-w-sm">
+
+        <Dialog v-model:visible="displayConfirmation" header="Confirmation" modal class="max-w-sm">
             <p>Are you sure you want to proceed with this action?</p>
             <template #footer>
                 <div class="flex justify-end gap-2">
@@ -289,7 +269,6 @@ export default {
                 </div>
             </template>
         </Dialog>
-     
 
         <!-- Diálogo de creación de región -->
         <Dialog v-model:visible="isRegionDialogVisible" modal header="Create Region">
@@ -306,21 +285,23 @@ export default {
                         </div>
                     </div>
                 </div>
-                <Button type="submit" label="Create" class="p-button-primary mt-3" />
+                 <!-- Contenedor para alinear el botón al final -->
+        <div class="flex justify-end mt-4">
+            <Button type="submit" label="Create" class="p-button-primary" />
+        </div>
             </form>
         </Dialog>
-     
 
         <!-- Diálogo de detalles de región -->
-        <Dialog v-model:visible="isShowDialogVisible" header="Region Details" modal :style="{ 'max-width': '20vw', width: '20vw' }"> 
+        <Dialog v-model:visible="isShowDialogVisible" header="Region Details" modal :style="{ 'max-width': '20vw', width: '20vw' }">
             <div v-if="detailRegionData" class="flex flex-col gap-4">
                 <p><strong>Name:</strong> {{ detailRegionData.nameRegion }}</p>
                 <p><strong>Description:</strong> {{ detailRegionData.description }}</p>
-                <p><strong>Status:</strong> <span :class="detailRegionData.status ? 'text-green-500' : 'text-red-500'">{{ detailRegionData.status ? 'Active' : 'Inactive' }}</span></p>
+                <p>
+                    <strong>Status:</strong> <span :class="detailRegionData.status ? 'text-green-500' : 'text-red-500'">{{ detailRegionData.status ? 'Active' : 'Inactive' }}</span>
+                </p>
             </div>
         </Dialog>
-
-       
 
         <!-- Diálogo de edición de región -->
         <Dialog v-model:visible="isEditDialogVisible" modal header="Edit Region">
@@ -337,11 +318,13 @@ export default {
                         </div>
                     </div>
                 </div>
-                <Button type="submit" label="Save" class="p-button-primary mt-3" />
+               <!-- Contenedor para alinear el botón al final -->
+        <div class="flex justify-end mt-4">
+            <Button type="submit" label="Save" class="p-button-primary" />
+        </div>
             </form>
         </Dialog>
-        </div>
-   
+    </div>
 </template>
 
 <style scoped>

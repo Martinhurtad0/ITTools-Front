@@ -143,9 +143,8 @@ export default {
                 this.showCreateModal = false;
                 this.resetForm();
                 await this.fetchServers();
-            } catch (err) {
-                console.error('Error creating server:', err);
-                this.showError(err.message || 'Creation failed');
+            } catch (error) {
+                this.showError(error.message || 'Registration  failed');
             }
         },
         validateIP(ip) {
@@ -203,8 +202,7 @@ export default {
                 this.isEditDialogVisible = false;
                 await this.fetchServers();
             } catch (error) {
-                console.error('Error updating server:', error);
-                this.showError('Update failed');
+                this.showError(error.message || 'Update failed');
             }
         },
         editServer(server) {
@@ -342,7 +340,10 @@ export default {
                         </div>
                     </div>
 
-                    <Button type="submit" label="Create" class="p-button-primary" />
+                  <!-- Contenedor para alinear el botón al final -->
+        <div class="flex justify-end mt-4">
+            <Button type="submit" label="Create" class="p-button-primary" />
+        </div>
                 </form>
             </Dialog>
         </div>
@@ -352,8 +353,8 @@ export default {
                 <div class="font-semibold text-xl">Servers</div>
                 <div class="flex justify-between items-center mb-2">
                     <div class="flex gap-2">
-                        <Button label="Create Server" icon="pi pi-plus" @click="openCreateModal" class="p-button-success" />
-                        <Button label="Filter All" icon="pi pi-filter" class="p-button-secondary" @click="toggleFilter" />
+                         <Button label="Create User" icon="pi pi-plus" @click="openCreateModal" />
+                        <Button label="Filter All" icon="pi pi-filter" class="p-button-secondary" @click="toggleFilter" style="background-color: rgb(104, 76, 84); border-color: rgb(104, 76, 84); color: white" />
                     </div>
                     <InputText v-model="globalFilter" placeholder="Global search..." class="p-inputtext p-component" />
                 </div>
@@ -462,7 +463,10 @@ export default {
                         <Dropdown id="editRegionId" v-model="editServerData.regionId" :options="regions" optionValue="idRegion" optionLabel="nameRegion" filter filterPlaceholder="Search..." class="custom-dropdown p-dropdown-sm" />
                     </div>
                 </div>
-                <Button type="submit" label="Save" class="p-button-primary mt-3" />
+                <!-- Contenedor para alinear el botón al final -->
+        <div class="flex justify-end mt-4">
+            <Button type="submit" label="Save" class="p-button-primary" />
+        </div>
             </form>
         </Dialog>
     </div>

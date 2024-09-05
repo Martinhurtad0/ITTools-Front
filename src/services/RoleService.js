@@ -19,8 +19,9 @@ export const roleService = {
       const response = await axios.post('/roles', roleData);
       return response.data;
     } catch (error) {
-      console.error('Registration failed:', error);
-      throw new Error(error.response?.data || 'Registration failed');
+      // Extract and format the error message
+      const message = error.message || 'Registration failed';
+      throw new Error(message);
     }
   },
 
@@ -30,8 +31,8 @@ export const roleService = {
       const response = await axios.put(`/roles/${roleId}`, roleData);
       return response.data;
     } catch (error) {
-      console.error('Update failed:', error);
-      throw new Error(error.response?.data || 'Update failed');
+      const message = error.message || 'Update failed';
+      throw new Error(message);
     }
   },
 
@@ -40,8 +41,8 @@ export const roleService = {
     try {
       await axios.delete(`/roles/${roleId}`);
     } catch (error) {
-      console.error('Delete failed:', error);
-      throw new Error(error.response?.data || 'Delete failed');
+      const message = error.message || 'Delete failed';
+      throw new Error(message);
     }
   }
 };

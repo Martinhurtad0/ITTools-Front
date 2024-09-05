@@ -102,7 +102,7 @@ export default {
                                 />
                                 <span class="text-sm">{{ agent.agentName }}</span>
                                 <span class="text-sm">||</span>
-                                <span class="text-sm">{{ agent.ipAgent }}</span>
+                                <span class="text-sm">{{ agent.ipagent }}</span>
                             </div>
                         </div>
                         <div v-if="filteredAgents.length === 0" class="text-sm text-gray-500 mt-2">No agents found for the selected region</div>

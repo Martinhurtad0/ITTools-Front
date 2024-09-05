@@ -1,7 +1,8 @@
 <script>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { registerUser, authService } from '@/services/AuthService';
+import { roleService } from '@/services/RoleService'; // Importar roleService
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Checkbox from 'primevue/checkbox';
@@ -17,11 +18,13 @@ export default {
         Checkbox,
         DataTable,
         Column,
-        Dialog,
+        Dialog
     },
     setup() {
         const toast = useToast();
         const error = ref('');
+        const roles = ref([]); // Almacena los roles cargados desde la API
+        const selectedRoles = ref([]); // Almacena los roles seleccionados
 
         const showSuccess = (detail) => {
             toast.add({ severity: 'success', summary: 'Success', detail, life: 3000 });
@@ -31,11 +34,26 @@ export default {
             toast.add({ severity: 'error', summary: 'Error', detail, life: 3000 });
         };
 
+        const loadRoles = async () => {
+            try {
+                const allRoles = await roleService.getRoles(); // Carga todos los roles desde la API
+                roles.value = allRoles.filter((role) => role.status == 1); // Filtra solo roles activos
+            } catch (err) {
+                showError('Failed to load roles');
+            }
+        };
+
+        onMounted(() => {
+            loadRoles(); // Cargar roles cuando se monta el componente
+        });
+
         return {
             toast,
             showSuccess,
             showError,
-            error
+            error,
+            roles, // Retorna los roles para ser usados en el template
+            selectedRoles // Retorna los roles seleccionados
         };
     },
     data() {
@@ -48,8 +66,6 @@ export default {
                 area: '',
                 status: true
             },
-            roles: ['USER', 'ADMIN'],
-            selectedRoles: [],
             users: [],
             filteredUsers: [],
             searchQuery: '',
@@ -99,7 +115,7 @@ export default {
                 this.resetForm(); // Limpia el formulario después de registrar el usuario
                 this.isCreateUserDialogVisible = false;
             } catch (err) {
-                this.showError(this.error || 'Registration failed');
+                this.showError(err.message || 'Registration failed');
             }
         },
         async loadUsers() {
@@ -143,7 +159,7 @@ export default {
                 this.resetForm();
                 this.isEditDialogVisible = false;
             } catch (err) {
-                this.showError(this.error || 'Update failed');
+                this.showError(err.message || 'Update failed');
             }
         },
         async deleteUser() {
@@ -163,17 +179,19 @@ export default {
             this.displayConfirmation = true;
         },
         async changeUserStatus() {
-            try {
-                const updatedUser = { ...this.userToChangeStatus, status: this.isActivating };
-                await authService.updateUser(updatedUser);
-                this.showSuccess(`User ${this.isActivating ? 'activated' : 'deactivated'} successfully`);
-                await this.loadUsers();
-                this.displayConfirmation = false;
-                this.userToChangeStatus = null;
-            } catch (err) {
-                this.showError(this.error || 'Status change failed');
-            }
-        },
+        try {
+            const updatedUser = { ...this.userToChangeStatus, status: this.isActivating };
+            await authService.updateUser(updatedUser);
+            this.showSuccess('User status changed successfully');
+            await this.loadUsers();
+            this.displayConfirmation = false;
+
+            // Aplicar el filtro después de cargar los usuarios
+            this.filterUsers();
+        } catch (err) {
+            this.showError(this.error || 'Status change failed');
+        }
+    },
         closeConfirmation() {
             this.displayConfirmation = false;
             this.userToChangeStatus = null;
@@ -205,7 +223,6 @@ export default {
 };
 </script>
 
-
 <template>
     <div class="flex flex-col h-screen p-4">
         <div class="flex-2">
@@ -214,23 +231,23 @@ export default {
                 <div class="flex justify-between items-center mb-2">
                     <!-- Agrupar los dos botones en un div con clase flex -->
                     <div class="flex gap-2">
-                        <Button label="Create User" icon="pi pi-plus" @click="openCreateUserDialog" class="p-button-success" />
-                        <Button label="Filter All" icon="pi pi-filter" class="p-button-secondary" @click="toggleFilter" />
+                        <Button label="Create User" icon="pi pi-plus" @click="openCreateUserDialog" />
+                        <Button label="Filter All" icon="pi pi-filter" class="p-button-secondary" @click="toggleFilter" style="background-color: rgb(104, 76, 84); border-color: rgb(104, 76, 84); color: white" />
                     </div>
                     <!-- Input de búsqueda al otro lado -->
                     <InputText v-model="searchQuery" placeholder="Global search..." class="p-inputtext p-component" />
                 </div>
 
                 <div class="overflow-x-auto">
-                    <DataTable :value="filteredUsers" class="p-datatable-sm" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="users.length"  sortMode="multiple">
-                        <Column field="full_name" header="Full Name"  sortable />
-                        <Column field="area" header="Area"  sortable />
-                        <Column field="roles" header="Roles"  sortable >
+                    <DataTable :value="filteredUsers" class="p-datatable-sm" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="users.length" sortMode="multiple">
+                        <Column field="full_name" header="Full Name" sortable />
+                        <Column field="area" header="Area" sortable />
+                        <Column field="roles" header="Roles" sortable>
                             <template #body="{ data }">
                                 <span>{{ data.roles.join(', ') }}</span>
                             </template>
                         </Column>
-                        <Column field="status" header="Status"  sortable >
+                        <Column field="status" header="Status" sortable>
                             <template #body="{ data }">
                                 <span :class="data.status ? 'text-green-500' : 'text-red-500'">{{ data.status ? 'Active' : 'Inactive' }}</span>
                             </template>
@@ -265,59 +282,52 @@ export default {
                 </div>
             </div>
         </Dialog>
-
-      
-            <!-- Diálogo de creación de usuario -->
-            <Dialog v-model:visible="isCreateUserDialogVisible" header="Create User" modal :style="{ 'max-width': '30vw', width: '30vw' }">
-                <form @submit.prevent="registerUser">
-                    <div class="flex gap-4">
-                        <!-- Sección de Inputs -->
-                        <div class="flex flex-col w-1/2 gap-4">
-                            <div class="flex flex-wrap gap-4">
-                                <div class="flex flex-col grow basis-0 gap-2">
-                                    <label for="emailCreate">Email</label>
-                                    <InputText id="emailCreate" type="email" v-model="editUserData.email" class="p-inputtext-sm input-with-line" placeholder="Enter Email" required />
-                                </div>
-                                <div class="flex flex-col grow basis-0 gap-2">
-                                    <label for="passwordCreate">Password</label>
-                                    <InputText id="passwordCreate" type="password" v-model="editUserData.password" class="p-inputtext-sm input-with-line" placeholder="Enter Password" required />
-                                </div>
-                                <div class="flex flex-col grow basis-0 gap-2">
-                                    <label for="full_nameCreate">Full Name</label>
-                                    <InputText id="full_nameCreate" type="text" v-model="editUserData.full_name" class="p-inputtext-sm input-with-line" placeholder="Enter Full Name" required />
-                                </div>
-                                <div class="flex flex-col grow basis-0 gap-2">
-                                    <label for="chargeCreate">Charge</label>
-                                    <InputText id="chargeCreate" type="text" v-model="editUserData.charge" class="p-inputtext-sm input-with-line" placeholder="Enter Charge" required />
-                                </div>
-                                <div class="flex flex-col grow basis-0 gap-2">
-                                    <label for="areaCreate">Area</label>
-                                    <InputText id="areaCreate" type="text" v-model="editUserData.area" class="p-inputtext-sm input-with-line" placeholder="Enter Area" required />
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Sección de Roles -->
-                        <div class="flex flex-col w-1/2 gap-2 pl-12">
-                            <!-- Añadido padding-left para espaciar -->
-                            <div class="flex flex-col gap-2">
-                                <label>Roles</label>
-                                <div class="flex flex-col gap-2">
-                                    <div v-for="role in roles" :key="role" class="flex items-center">
-                                        <Checkbox v-model="selectedRoles" :value="role" :label="role" class="mr-2" />
-                                        <span>{{ role }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+<!-- Diálogo de creación de usuario -->
+<Dialog v-model:visible="isCreateUserDialogVisible" header="Create User" modal :style="{ 'max-width': '30vw', width: '30vw' }">
+    <form @submit.prevent="registerUser">
+        <div class="flex gap-4">
+            <!-- Sección de Inputs -->
+            <div class="flex flex-col w-1/2 gap-4">
+                <div class="flex flex-wrap gap-4">
+                    <div class="flex flex-col grow basis-0 gap-2">
+                        <label for="emailCreate">Email</label>
+                        <InputText id="emailCreate" type="email" v-model="editUserData.email" class="p-inputtext-sm input-with-line" placeholder="Enter Email" required />
                     </div>
-
-                    <Button type="submit" label="Create" class="p-button-primary mt-3" />
-                </form>
-            </Dialog>
+                    <div class="flex flex-col grow basis-0 gap-2">
+                        <label for="passwordCreate">Password</label>
+                        <InputText id="passwordCreate" type="password" v-model="editUserData.password" class="p-inputtext-sm input-with-line" placeholder="Enter Password" required />
+                    </div>
+                    <div class="flex flex-col grow basis-0 gap-2">
+                        <label for="full_nameCreate">Full Name</label>
+                        <InputText id="full_nameCreate" type="text" v-model="editUserData.full_name" class="p-inputtext-sm input-with-line" placeholder="Enter Full Name" required />
+                    </div>
+                    <div class="flex flex-col grow basis-0 gap-2">
+                        <label for="chargeCreate">Charge</label>
+                        <InputText id="chargeCreate" type="text" v-model="editUserData.charge" class="p-inputtext-sm input-with-line" placeholder="Enter Charge" required />
+                    </div>
+                    <div class="flex flex-col grow basis-0 gap-2">
+                        <label for="areaCreate">Area</label>
+                        <InputText id="areaCreate" type="text" v-model="editUserData.area" class="p-inputtext-sm input-with-line" placeholder="Enter Area" required />
+                    </div>
+                </div>
+            </div>
+            <!-- Sección de Roles -->
+            <div class="flex flex-col w-1/2 gap-2 pl-12">
+                <!-- Añadido padding-left para espaciar -->
+                <label>Roles</label>
+                <div v-for="role in roles" :key="role.id" class="flex items-center">
+                    <Checkbox v-model="selectedRoles" :value="role.authority" class="mr-2" />
+                    <label>{{ role.authority }}</label>
+                </div>
+            </div>
+        </div>
         
-
-        
-      
+        <!-- Contenedor para alinear el botón al final -->
+        <div class="flex justify-end mt-4">
+            <Button type="submit" label="Create" class="p-button-primary" />
+        </div>
+    </form>
+</Dialog>
 
         <!-- Diálogo de confirmación borrar -->
         <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
@@ -329,12 +339,6 @@ export default {
                 </div>
             </template>
         </Dialog>
-
-
-    
-
-        
-      
 
         <!-- Diálogo de confirmación inactivar-->
         <Dialog v-model:visible="displayConfirmation" header="Confirmation" modal class="max-w-sm">
@@ -348,9 +352,6 @@ export default {
                 </div>
             </template>
         </Dialog>
-       
-
-      
 
         <!-- Diálogo de edición -->
         <Dialog v-model:visible="isEditDialogVisible" header="Edit User" modal :style="{ 'max-width': '30vw', width: '30vw' }">
@@ -383,23 +384,20 @@ export default {
                     </div>
                     <!-- Sección de Roles -->
                     <div class="flex flex-col w-1/2 gap-2 pl-12">
-                        <!-- Añadido padding-left para espaciar -->
-                        <div class="flex flex-col gap-2">
-                            <label>Roles</label>
-                            <div class="flex flex-col gap-2">
-                                <div v-for="role in roles" :key="role" class="flex items-center">
-                                    <Checkbox v-model="editUserData.roles" :value="role" :label="role" class="mr-2" />
-                                    <span>{{ role }}</span>
-                                </div>
-                            </div>
+                        <label>Roles</label>
+                        <div v-for="role in roles" :key="role.id" class="flex items-center">
+                            <Checkbox v-model="editUserData.roles" :value="role.authority" class="mr-2" />
+                            <label>{{ role.authority }}</label>
                         </div>
                     </div>
                 </div>
 
-                <Button type="submit" label="Save" class="p-button-primary mt-3" />
+                 <!-- Contenedor para alinear el botón al final -->
+        <div class="flex justify-end mt-4">
+            <Button type="submit" label="Save" class="p-button-primary" />
+        </div>
             </form>
         </Dialog>
-       
     </div>
 </template>
 
