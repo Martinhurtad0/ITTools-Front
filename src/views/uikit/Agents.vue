@@ -393,7 +393,7 @@ export default {
                     </div>
                 </div>
                 <div class="flex justify-end mt-4">
-                    <Button label="Create" type="submit" class="p-button-success" />
+                    <Button label="Create" type="submit" class="p-button-primary" />
                 </div>
             </form>
         </Dialog>

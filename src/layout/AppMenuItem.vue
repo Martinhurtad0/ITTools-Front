@@ -46,7 +46,6 @@ const menuItemClasses = computed(() => ({
 
 .menu-link {
     display: flex;
-    align-items: center;
     text-decoration: none;
     padding: var(--menu-link-padding, 0.75rem 1rem);
     color: var(--menu-link-color, inherit);
@@ -55,8 +54,11 @@ const menuItemClasses = computed(() => ({
 }
 
 .menu-link:hover {
-    color: var(--primary-color, teal); /* Cambiar color al pasar el mouse */
+    background-color: #f0f0f0; /* Fondo gris claro */
+    color: #64c4ac
 }
+
+
 
 .menu-icon {
     font-size: var(--menu-icon-size, 1.5rem);

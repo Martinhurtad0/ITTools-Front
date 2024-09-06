@@ -3,10 +3,10 @@ import { computed, reactive, readonly, onMounted } from 'vue';
 // Configuración inicial del layout
 const layoutConfig = reactive({
     preset: 'Aura',
-    primary: 'teal', 
+    primary: '#64c4ac', 
     surface: 'soho',
     darkTheme: false,
-    menuMode: 'static'
+    menuMode: 'static' // Asegura que el menú sea estático
 });
 
 const layoutState = reactive({
@@ -16,8 +16,10 @@ const layoutState = reactive({
     configSidebarVisible: false,
     staticMenuMobileActive: false,
     menuHoverActive: false,
-    activeMenuItem: null
+    activeMenuItem: null,
+    sidebarCollapsed: false // Añadir esta línea
 });
+
 
 export function useLayout() {
     // Función para aplicar colores al DOM
@@ -51,7 +53,7 @@ export function useLayout() {
 
     // Guardar y cambiar el color primario
     const setPrimary = (value) => {
-        layoutConfig.primary = value || 'teal';
+        layoutConfig.primary = value || '#64c4ac'; // Cambia a #64c4ac
         localStorage.setItem('primary', layoutConfig.primary); // Guardar en localStorage
         applyColors(); // Aplicar colores
     };
@@ -94,13 +96,15 @@ export function useLayout() {
         if (layoutConfig.menuMode === 'overlay') {
             layoutState.overlayMenuActive = !layoutState.overlayMenuActive;
         }
-
+    
         if (window.innerWidth > 991) {
             layoutState.staticMenuDesktopInactive = !layoutState.staticMenuDesktopInactive;
+            layoutState.sidebarCollapsed = !layoutState.sidebarCollapsed; // Añadir esta línea
         } else {
             layoutState.staticMenuMobileActive = !layoutState.staticMenuMobileActive;
         }
     };
+    
 
     const resetMenu = () => {
         layoutState.overlayMenuActive = false;

@@ -58,7 +58,7 @@ const model = ref([
     padding: 0;
     margin: 0;
     list-style: none;
-    margin-top: 1.5rem;
-    margin-left: 1rem;
+    margin-top: 7%;
+    margin-left: 5%;
 }
 </style>

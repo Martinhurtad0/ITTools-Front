@@ -1,7 +1,6 @@
 <script setup>
 import { useLayout } from '@/layout/composables/layout';
 import { useRouter } from 'vue-router'; // Importa useRouter para redireccionar
-import AppConfigurator from './AppConfigurator.vue';
 import logo from '@/assets/emida-logo-square.png'; // Importa la imagen
 
 const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
