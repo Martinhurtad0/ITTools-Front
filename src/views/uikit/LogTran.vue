@@ -4,6 +4,7 @@ import Dropdown from 'primevue/dropdown';
 import RadioButton from 'primevue/radiobutton'; // Importar RadioButton
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
+import Calendar from 'primevue/calendar'; // Importar Calendar
 import { regionService } from '@/services/RegionService';
 import { serverService } from '@/services/AgentService';
 
@@ -12,7 +13,8 @@ export default {
         Dropdown,
         RadioButton, // Registrar RadioButton
         InputText,
-        Button
+        Button,
+        Calendar // Registrar Calendar
     },
     setup() {
         const regions = ref([]);
@@ -20,6 +22,7 @@ export default {
         const selectedRegion = ref(null);
         const filteredAgents = ref([]);
         const selectedAgent = ref(null); // Para almacenar el agente seleccionado
+        const date = ref(null); // Para almacenar la fecha seleccionada
 
         async function loadRegions() {
             try {
@@ -61,14 +64,15 @@ export default {
             agents,
             selectedRegion,
             filteredAgents,
-            selectedAgent
+            selectedAgent,
+            date // Añadir 'date' a la lista de variables reactivas
         };
     }
 };
 </script>
 
 <template>
-     <div class="flex flex-col h-screen p-4">
+    <div class="flex flex-col h-screen p-4">
         <div class="flex gap-6">
             <!-- Div para la primera mitad -->
             <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
@@ -90,10 +94,11 @@ export default {
 
                 <div class="mb-6">
                     <label for="last-modified" class="block text-sm font-medium mb-2">Last Modified</label>
-                    <input 
-                        id="last-modified" 
-                        type="date" 
-                        class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 date-input" 
+                    <Calendar
+                        id="last-modified"
+                        v-model="date"
+                        class="w-full"
+                        placeholder="Select Date"
                     />
                 </div>
 
@@ -117,29 +122,19 @@ export default {
             <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
                 <div class="font-semibold text-xl mb-4">Log Files</div>
                 <div>
-                    <Button 
-                        label="Send" 
-                        class="w-full p-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                    />
+                    <div class="flex justify-end mt-4">
+                        <Button id="create-button" type="submit" label="Send" icon="pi pi-send" />
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </template>
 
-
-
 <style scoped>
-/* Asegurar que el input de fecha tenga el mismo tamaño que el InputText */
-.date-input {
-    height: calc(1.5em + 1rem + 2px); /* Altura del input ajustada para que coincida con InputText */
-    padding: 0.75rem; /* Relleno consistente con InputText */
-}
-
 /* Asegurar que todos los campos de entrada sean del mismo tamaño */
-input[type='date'],
-.p-inputtext {
-    width: 100%; /* Asegura que el input ocupe el 100% del ancho del contenedor */
+.p-calendar {
+    width: 100%; /* Asegura que el calendario ocupe el 100% del ancho del contenedor */
     border-radius: 0.375rem; /* Radio de borde consistente */
     border: 1px solid #d1d5db; /* Borde consistente */
 }
@@ -147,5 +142,17 @@ input[type='date'],
 /* Margen adicional para radio buttons */
 .radio-margin {
     margin-left: 1rem; /* Ajusta el margen según sea necesario */
+}
+
+#create-button {
+  background: #64c4ac;
+  color: white;
+  border-color: #64c4ac;
+}
+
+#create-button:hover {
+  background: white;
+  color: #64c4ac;
+  border-color: #64c4ac;
 }
 </style>

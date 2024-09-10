@@ -67,9 +67,14 @@ export default {
         await this.loadRoles();
     },
     methods: {
-        openCreateRoleDialog() {
-            this.resetForm(); // Limpia el formulario al abrir el diálogo de creación
-            this.isCreateRoleDialogVisible = true;
+        async loadRoles() {
+            try {
+                this.roles = await roleService.getRoles();
+                this.filterRoles(); // Aplica el filtro sin modificar showAll
+            } catch (error) {
+                this.showError('Error fetching roles');
+                console.error('Error fetching roles:', error);
+            }
         },
         async registerRole() {
             try {
@@ -80,30 +85,6 @@ export default {
             } catch (err) {
                 this.showError(err.message || 'Registration failed');
             }
-        },
-        async loadRoles() {
-            try {
-                this.roles = await roleService.getRoles();
-                this.filterRoles(); // Aplica el filtro sin modificar showAll
-            } catch (error) {
-                this.showError('Error fetching roles');
-                console.error('Error fetching roles:', error);
-            }
-        },
-        resetForm() {
-            this.role = {
-                authority: '',
-                description: ''
-            };
-            this.editRoleData = { ...this.role }; // Restablece el formulario de edición también
-        },
-        editRole(role) {
-            this.editRoleData = { ...role };
-            this.isEditDialogVisible = true;
-        },
-        confirmDeleteRole(roleId) {
-            this.roleToDelete = roleId;
-            this.displayDeleteConfirmation = true;
         },
         async updateRole() {
             try {
@@ -128,12 +109,6 @@ export default {
                 this.displayDeleteConfirmation = false;
             }
         },
-
-        openConfirmation(role, isActivating) {
-            this.roleToChangeStatus = { ...role, status: isActivating };
-            this.isActivating = isActivating;
-            this.displayConfirmation = true;
-        },
         async changeRoleStatus() {
             try {
                 await roleService.updateRole(this.roleToChangeStatus.id, this.roleToChangeStatus);
@@ -148,6 +123,36 @@ export default {
                 this.showError(this.error || 'Status change failed');
             }
         },
+        async handleClose() {
+            this.isCreateRoleDialogVisible = false;
+            this.isEditDialogVisible = false;
+        },
+
+        openCreateRoleDialog() {
+            this.resetForm(); // Limpia el formulario al abrir el diálogo de creación
+            this.isCreateRoleDialogVisible = true;
+        },
+        resetForm() {
+            this.role = {
+                authority: '',
+                description: ''
+            };
+            this.editRoleData = { ...this.role }; // Restablece el formulario de edición también
+        },
+        editRole(role) {
+            this.editRoleData = { ...role };
+            this.isEditDialogVisible = true;
+        },
+        confirmDeleteRole(roleId) {
+            this.roleToDelete = roleId;
+            this.displayDeleteConfirmation = true;
+        },
+        openConfirmation(role, isActivating) {
+            this.roleToChangeStatus = { ...role, status: isActivating };
+            this.isActivating = isActivating;
+            this.displayConfirmation = true;
+        },
+
         closeConfirmation() {
             this.displayConfirmation = false;
             this.roleToChangeStatus = null;
@@ -187,8 +192,8 @@ export default {
                 <div class="flex justify-between items-center mb-2">
                     <!-- Agrupar los dos botones en un div con clase flex -->
                     <div class="flex gap-2">
-                        <Button label="Create Role" icon="pi pi-plus" @click="openCreateRoleDialog" />
-                        <Button label="Filter All" icon="pi pi-filter" class="p-button-secondary" @click="toggleFilter" style="background-color: rgb(104, 76, 84); border-color: rgb(104, 76, 84); color: white" />
+                        <Button label="Create Role" icon="pi pi-plus" id="create-button"  @click="openCreateRoleDialog" />
+                        <Button label="Filter All" icon="pi pi-filter" id="close-button" @click="toggleFilter" />
                     </div>
                     <!-- Input de búsqueda al otro lado -->
                     <InputText v-model="searchQuery" placeholder="Global search..." class="p-inputtext p-component" />
@@ -236,7 +241,8 @@ export default {
                 </div>
                 <!-- Contenedor para alinear el botón al final -->
                 <div class="flex justify-end mt-4">
-                    <Button type="submit" label="Create" class="p-button-primary" />
+                    <Button id="close-button" label="Close" @click="handleClose" style="margin-right: 8px" />
+                    <Button id="create-button" type="submit" label="Create" />
                 </div>
             </form>
         </Dialog>
@@ -258,7 +264,8 @@ export default {
                 </div>
                 <!-- Contenedor para alinear el botón al final -->
                 <div class="flex justify-end mt-4">
-                    <Button type="submit" label="Save" class="p-button-primary" />
+                    <Button id="close-button" label="Close" @click="handleClose" style="margin-right: 8px" />
+                    <Button id="create-button" type="submit" label="Save" />
                 </div>
             </form>
         </Dialog>
@@ -302,5 +309,29 @@ export default {
 /* Opcional: para añadir algo de espacio debajo del input */
 .input-with-line {
     margin-bottom: 0.5rem; /* Espacio debajo del campo de entrada */
+}
+
+#close-button {
+  background: #614d56;
+  color: white;
+  border-color: #614d56;
+}
+
+#close-button:hover {
+  background: white;
+  color: #614d56;
+  border-color: #614d56;
+}
+
+#create-button {
+  background: #64c4ac;
+  color: white;
+  border-color: #64c4ac;
+}
+
+#create-button:hover {
+  background: white;
+  color: #64c4ac;
+  border-color: #64c4ac;
 }
 </style>

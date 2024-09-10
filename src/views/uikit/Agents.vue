@@ -102,46 +102,36 @@ export default {
         }
     },
     methods: {
-        async fetchServers() {
+        async loadRegions() {
             try {
-                const servers = await serverService.getAllServers();
-                this.servers = servers.map((server) => ({
-                    ...server,
-                    region: this.getRegionNameById(server.regionId) // Agrega la región al objeto del servidor
-                }));
-                this.filteredServers = [...this.servers];
+                const allRegions = await regionService.getAllRegions();
+                this.regions = allRegions.filter((region) => region.status === 1);
             } catch (error) {
-                console.error('Error fetching servers:', error);
-                this.showError('Error fetching servers');
+                console.error('Error fetching regions:', error);
+                this.showError('Error fetching regions');
             }
         },
-        applyFilters() {
-            this.filteredServers = this.servers.filter((server) => {
-                const globalFilter = this.searchQuery.toLowerCase();
-                const matchesSearch = !globalFilter || server.agentName.toLowerCase().includes(globalFilter) || server.ipagent.toLowerCase().includes(globalFilter) || server.webServiceUrl.toLowerCase().includes(globalFilter);
-                const matchesActiveFilter = this.showAll || server.status === 1;
-                return matchesSearch && matchesActiveFilter;
-            });
-        },
-        toggleFilter() {
-            this.showAll = !this.showAll;
-            this.applyFilters();
-        },
-        getRegionNameById(regionId) {
-            const region = this.regions.find((region) => region.idRegion === regionId);
-            return region ? region.nameRegion : 'Unknown Region';
-        },
-        editServer(server) {
-            this.editServerData = { ...server };
-            this.isEditDialogVisible = true;
-        },
-        showServerDetails(server) {
-            this.detailServerData = { ...server };
-            this.isShowDialogVisible = true;
-        },
-        confirmDeleteServer(serverId) {
-            this.serverToDelete = serverId;
-            this.displayDeleteConfirmation = true;
+        async createServer() {
+            if (!this.validateIP(this.newServer.ipagent)) {
+                this.showError('Invalid IP address');
+                return;
+            }
+            try {
+                const serverData = {
+                    agentName: this.newServer.agentName,
+                    ipagent: this.newServer.ipagent,
+                    webServiceUrl: this.newServer.webServiceUrl,
+                    pathArchive: this.newServer.pathArchive,
+                    regionId: this.newServer.regionId ? Number(this.newServer.regionId) : null
+                };
+                await serverService.createServer(serverData);
+                this.showSuccess('Agent created successfully');
+                this.resetNewServerForm();
+                await this.fetchServers();
+                this.closeCreateServerDialog();
+            } catch (error) {
+                this.showError(error.message || 'Registration failed');
+            }
         },
         async updateServer() {
             try {
@@ -174,18 +164,6 @@ export default {
                 this.showError('Failed to update server status');
             }
         },
-        openConfirmation(server, isActivating) {
-            this.selectedServer = server;
-            this.isActivating = isActivating;
-            this.displayConfirmation = true;
-        },
-        closeDeleteConfirmation() {
-            this.displayDeleteConfirmation = false;
-            this.serverToDelete = null;
-        },
-        openCreateServerDialog() {
-            this.isCreateServerDialogVisible = true;
-        },
         async toggleStatus(server) {
             const updatedStatus = server.status === 1 ? 0 : 1;
             try {
@@ -198,40 +176,70 @@ export default {
                 this.showError('Failed to update server status');
             }
         },
+        async handleClose() {
+            this.closeCreateServerDialog();
+            this.isEditDialogVisible = false;
+        },
+        async fetchServers() {
+            try {
+                const servers = await serverService.getAllServers();
+                this.servers = servers.map((server) => ({
+                    ...server,
+                    region: this.getRegionNameById(server.regionId) // Agrega la región al objeto del servidor
+                }));
+                this.filteredServers = [...this.servers];
+            } catch (error) {
+                console.error('Error fetching servers:', error);
+                this.showError('Error fetching servers');
+            }
+        },
+
+        applyFilters() {
+            this.filteredServers = this.servers.filter((server) => {
+                const globalFilter = this.searchQuery.toLowerCase();
+                const matchesSearch = !globalFilter || server.agentName.toLowerCase().includes(globalFilter) || server.ipagent.toLowerCase().includes(globalFilter) || server.webServiceUrl.toLowerCase().includes(globalFilter);
+                const matchesActiveFilter = this.showAll || server.status === 1;
+                return matchesSearch && matchesActiveFilter;
+            });
+        },
+        toggleFilter() {
+            this.showAll = !this.showAll;
+            this.applyFilters();
+        },
+        getRegionNameById(regionId) {
+            const region = this.regions.find((region) => region.idRegion === regionId);
+            return region ? region.nameRegion : 'Unknown Region';
+        },
+        editServer(server) {
+            this.editServerData = { ...server };
+            this.isEditDialogVisible = true;
+        },
+        showServerDetails(server) {
+            this.detailServerData = { ...server };
+            this.isShowDialogVisible = true;
+        },
+        confirmDeleteServer(serverId) {
+            this.serverToDelete = serverId;
+            this.displayDeleteConfirmation = true;
+        },
+
+        openConfirmation(server, isActivating) {
+            this.selectedServer = server;
+            this.isActivating = isActivating;
+            this.displayConfirmation = true;
+        },
+        closeDeleteConfirmation() {
+            this.displayDeleteConfirmation = false;
+            this.serverToDelete = null;
+        },
+        openCreateServerDialog() {
+            this.isCreateServerDialogVisible = true;
+        },
+
         closeConfirmation() {
             this.displayConfirmation = false;
         },
-        async loadRegions() {
-            try {
-                const allRegions = await regionService.getAllRegions();
-                this.regions = allRegions.filter((region) => region.status === 1);
-            } catch (error) {
-                console.error('Error fetching regions:', error);
-                this.showError('Error fetching regions');
-            }
-        },
-        async createServer() {
-            if (!this.validateIP(this.newServer.ipagent)) {
-                this.showError('Invalid IP address');
-                return;
-            }
-            try {
-                const serverData = {
-                    agentName: this.newServer.agentName,
-                    ipagent: this.newServer.ipagent,
-                    webServiceUrl: this.newServer.webServiceUrl,
-                    pathArchive: this.newServer.pathArchive,
-                    regionId: this.newServer.regionId ? Number(this.newServer.regionId) : null
-                };
-                await serverService.createServer(serverData);
-                this.showSuccess('Agent created successfully');
-                this.resetNewServerForm();
-                await this.fetchServers();
-                this.closeCreateServerDialog();
-            } catch (error) {
-                this.showError(error.message || 'Registration failed');
-            }
-        },
+
         resetNewServerForm() {
             this.newServer = {
                 agentName: '',
@@ -252,7 +260,6 @@ export default {
 };
 </script>
 
-
 <template>
     <div class="flex flex-col h-screen p-4">
         <div class="flex-2 overflow-auto">
@@ -261,8 +268,8 @@ export default {
                 <div class="flex justify-between items-center mb-2">
                     <!-- Agrupar los dos botones en un div con clase flex -->
                     <div class="flex gap-2">
-                        <Button label="Create User" icon="pi pi-plus" @click="openCreateServerDialog" />
-                        <Button label="Filter All" icon="pi pi-filter" class="p-button-secondary" @click="toggleFilter" style="background-color: rgb(104, 76, 84); border-color: rgb(104, 76, 84); color: white" />
+                        <Button label="Create User" icon="pi pi-plus" id="create-button" @click="openCreateServerDialog" />
+                        <Button label="Filter All" icon="pi pi-filter" id="close-button"  @click="toggleFilter" />
                     </div>
                     <!-- Input de búsqueda al otro lado -->
                     <InputText v-model="searchQuery" placeholder="Global search..." class="p-inputtext p-component" />
@@ -303,6 +310,44 @@ export default {
             </div>
         </div>
 
+        <!-- Diálogo de creación de servidor -->
+        <Dialog header="Create Agent" v-model:visible="isCreateServerDialogVisible" modal :style="{ 'max-width': '30vw', width: '30vw' }">
+            <form @submit.prevent="createServer">
+                <div class="flex gap-4">
+                    <!-- Inputs columna izquierda -->
+                    <div class="flex flex-col w-1/2 gap-4">
+                        <div class="flex flex-col gap-2">
+                            <label for="create_serverName">Server Name</label>
+                            <InputText id="create_serverName" v-model="newServer.agentName" class="p-inputtext-sm input-with-line" placeholder="Enter Server Name" />
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="create_ipagent">IP Address</label>
+                            <InputText id="create_ipagent" v-model="newServer.ipagent" class="p-inputtext-sm input-with-line" placeholder="Enter IP Address" />
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="create_webServiceUrl">Web Service URL</label>
+                            <InputText id="create_webServiceUrl" v-model="newServer.webServiceUrl" class="p-inputtext-sm input-with-line" placeholder="Enter Web Service URL" />
+                        </div>
+                    </div>
+                    <!-- Inputs columna derecha -->
+                    <div class="flex flex-col w-1/2 gap-4">
+                        <div class="flex flex-col gap-2">
+                            <label for="create_pathArchive">Path Archive</label>
+                            <InputText id="create_pathArchive" v-model="newServer.pathArchive" class="p-inputtext-sm input-with-line" placeholder="Enter Path Archive" />
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="create_regionId">Select Region</label>
+                            <Dropdown id="create_regionId" v-model="newServer.regionId" :options="regions" optionLabel="nameRegion" optionValue="idRegion" filter filterPlaceholder="Search..." class="custom-dropdown p-dropdown-sm" />
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-4">
+                    <Button id="close-button" label="Close" @click="handleClose" style="margin-right: 8px" />
+                    <Button id="create-button" type="submit" label="Create" />
+                </div>
+            </form>
+        </Dialog>
+
         <!-- Modal de edición de servidor -->
 
         <Dialog header="Edit Agent" v-model:visible="isEditDialogVisible" modal :style="{ 'max-width': '30vw', width: '30vw' }">
@@ -337,10 +382,11 @@ export default {
                     </div>
                 </div>
 
-                  <!-- Contenedor para alinear el botón al final -->
-        <div class="flex justify-end mt-4">
-            <Button type="submit" label="Save" class="p-button-primary" />
-        </div>
+                <!-- Contenedor para alinear el botón al final -->
+                <div class="flex justify-end mt-4">
+                    <Button id="close-button" label="Close" @click="handleClose" style="margin-right: 8px" />
+                    <Button id="create-button" type="submit" label="Save" />
+                </div>
             </form>
         </Dialog>
 
@@ -361,43 +407,6 @@ export default {
             </div>
         </Dialog>
 
-        <!-- Diálogo de creación de servidor -->
-        <Dialog header="Create Agent" v-model:visible="isCreateServerDialogVisible" modal :style="{ 'max-width': '30vw', width: '30vw' }">
-            <form @submit.prevent="createServer">
-                <div class="flex gap-4">
-                    <!-- Inputs columna izquierda -->
-                    <div class="flex flex-col w-1/2 gap-4">
-                        <div class="flex flex-col gap-2">
-                            <label for="create_serverName">Server Name</label>
-                            <InputText id="create_serverName" v-model="newServer.agentName" class="p-inputtext-sm input-with-line" placeholder="Enter Server Name" />
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <label for="create_ipagent">IP Address</label>
-                            <InputText id="create_ipagent" v-model="newServer.ipagent" class="p-inputtext-sm input-with-line" placeholder="Enter IP Address" />
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <label for="create_webServiceUrl">Web Service URL</label>
-                            <InputText id="create_webServiceUrl" v-model="newServer.webServiceUrl" class="p-inputtext-sm input-with-line" placeholder="Enter Web Service URL" />
-                        </div>
-                    </div>
-                    <!-- Inputs columna derecha -->
-                    <div class="flex flex-col w-1/2 gap-4">
-                        <div class="flex flex-col gap-2">
-                            <label for="create_pathArchive">Path Archive</label>
-                            <InputText id="create_pathArchive" v-model="newServer.pathArchive"class="p-inputtext-sm input-with-line" placeholder="Enter Path Archive" />
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <label for="create_regionId">Select Region</label>
-                            <Dropdown id="create_regionId" v-model="newServer.regionId" :options="regions" optionLabel="nameRegion" optionValue="idRegion" filter filterPlaceholder="Search..." class="custom-dropdown p-dropdown-sm" />
-                        </div>
-                    </div>
-                </div>
-                <div class="flex justify-end mt-4">
-                    <Button label="Create" type="submit" class="p-button-primary" />
-                </div>
-            </form>
-        </Dialog>
-
         <!-- Diálogo de confirmación borrar -->
         <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
             <p>Are you sure you want to delete this agent?</p>
@@ -409,7 +418,6 @@ export default {
             </template>
         </Dialog>
 
-        <!-- Modal de confirmación -->
         <!-- Diálogo de confirmación inactivar-->
         <Dialog v-model:visible="displayConfirmation" header="Confirmation" modal class="max-w-sm">
             <p>Are you sure you want to proceed with this action?</p>
@@ -463,5 +471,29 @@ export default {
 
 .p-dropdown .p-dropdown-items {
     font-size: 0.875rem; /* Tamaño de fuente de las opciones */
+}
+
+#close-button {
+  background: #614d56;
+  color: white;
+  border-color: #614d56;
+}
+
+#close-button:hover {
+  background: white;
+  color: #614d56;
+  border-color: #614d56;
+}
+
+#create-button {
+  background: #64c4ac;
+  color: white;
+  border-color: #64c4ac;
+}
+
+#create-button:hover {
+  background: white;
+  color: #64c4ac;
+  border-color: #64c4ac;
 }
 </style>

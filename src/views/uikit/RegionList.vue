@@ -48,7 +48,6 @@ export default {
             },
             isEditDialogVisible: false,
             isRegionDialogVisible: false,
-            isShowDialogVisible: false,
             editRegionData: {
                 idRegion: null,
                 nameRegion: '',
@@ -58,7 +57,6 @@ export default {
             displayConfirmation: false,
             regionToChangeStatus: null,
             isActivating: false,
-            detailRegionData: {},
             filterActiveOnly: true,
             displayDeleteConfirmation: false,
             regionToDelete: null
@@ -90,17 +88,6 @@ export default {
                 this.showError(errorMessage);
             }
         },
-        resetForm() {
-            this.region = {
-                nameRegion: '',
-                description: '',
-                status: 1
-            };
-        },
-        editRegion(region) {
-            this.editRegionData = { ...region };
-            this.isEditDialogVisible = true;
-        },
         async updateRegion() {
             try {
                 await regionService.updateRegion(this.editRegionData.idRegion, this.editRegionData);
@@ -114,20 +101,6 @@ export default {
                     this.showError(err.message || 'Update failed');
                 }
             }
-        },
-
-        openConfirmation(region, isActivating) {
-            this.regionToChangeStatus = region;
-            this.isActivating = isActivating;
-            this.displayConfirmation = true;
-        },
-        openCreateRegionDialog() {
-            this.resetForm();
-            this.isRegionDialogVisible = true;
-        },
-        openDeleteConfirmation(region) {
-            this.regionToDelete = region;
-            this.displayDeleteConfirmation = true; // Mostrar el diálogo de confirmación
         },
         async deleteRegion() {
             if (!this.regionToDelete || this.regionToDelete.idRegion == null) {
@@ -154,14 +127,6 @@ export default {
             }
         },
 
-        closeDeleteConfirmation() {
-            this.displayDeleteConfirmation = false;
-            this.regionToDelete = null;
-        },
-        showRegionDetails(region) {
-            this.detailRegionData = { ...region };
-            this.isShowDialogVisible = true;
-        },
         async changeRegionStatus() {
             if (!this.regionToChangeStatus || this.regionToChangeStatus.idRegion == null) {
                 this.showError('Region ID is missing');
@@ -178,6 +143,42 @@ export default {
                 this.showError(err.message || 'Status change failed');
             }
         },
+
+        async handleClose() {
+            this.isRegionDialogVisible = false;
+            this.isEditDialogVisible = false;
+        },
+
+        closeDeleteConfirmation() {
+            this.displayDeleteConfirmation = false;
+            this.regionToDelete = null;
+        },
+
+        resetForm() {
+            this.region = {
+                nameRegion: '',
+                description: '',
+                status: 1
+            };
+        },
+        editRegion(region) {
+            this.editRegionData = { ...region };
+            this.isEditDialogVisible = true;
+        },
+        openConfirmation(region, isActivating) {
+            this.regionToChangeStatus = region;
+            this.isActivating = isActivating;
+            this.displayConfirmation = true;
+        },
+        openCreateRegionDialog() {
+            this.resetForm();
+            this.isRegionDialogVisible = true;
+        },
+        openDeleteConfirmation(region) {
+            this.regionToDelete = region;
+            this.displayDeleteConfirmation = true; // Mostrar el diálogo de confirmación
+        },
+
         closeConfirmation() {
             this.displayConfirmation = false;
             this.userToChangeStatus = null;
@@ -216,8 +217,8 @@ export default {
                 <div class="font-semibold text-xl">Regions</div>
                 <div class="flex justify-between items-center mb-2">
                     <div class="flex gap-2">
-                        <Button label="Create Region" icon="pi pi-plus" @click="openCreateRegionDialog" />
-                        <Button label="Filter All" icon="pi pi-filter" class="p-button-secondary" @click="toggleFilter" style="background-color: rgb(104, 76, 84); border-color: rgb(104, 76, 84); color: white" />
+                        <Button label="Create Region" icon="pi pi-plus" id="create-button" @click="openCreateRegionDialog" />
+                        <Button label="Filter All" icon="pi pi-filter" id="close-button" @click="toggleFilter"  />
                     </div>
                     <InputText v-model="searchQuery" placeholder="Global search..." class="p-inputtext p-component" />
                 </div>
@@ -234,7 +235,6 @@ export default {
                         </Column>
                         <Column header="Actions">
                             <template #body="{ data }">
-                                <Button icon="pi pi-eye" class="p-button-rounded p-button-success p-button-text" @click="showRegionDetails(data)" />
                                 <Button icon="pi pi-pencil" class="p-button-rounded p-button-info p-button-text" @click="editRegion(data)" />
                                 <Button
                                     :icon="data.status ? 'pi pi-power-off' : 'pi pi-power-off'"
@@ -248,27 +248,6 @@ export default {
                 </div>
             </div>
         </div>
-
-        <!-- Diálogo de confirmación eliminar -->
-        <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
-            <p>Are you sure you want to delete this region?</p>
-            <template #footer>
-                <div class="flex justify-end gap-2">
-                    <Button label="No" icon="pi pi-times" @click="closeDeleteConfirmation" class="p-button-text p-button-secondary" />
-                    <Button label="Yes" icon="pi pi-check" @click="deleteRegion" class="p-button-text p-button-danger" />
-                </div>
-            </template>
-        </Dialog>
-
-        <Dialog v-model:visible="displayConfirmation" header="Confirmation" modal class="max-w-sm">
-            <p>Are you sure you want to proceed with this action?</p>
-            <template #footer>
-                <div class="flex justify-end gap-2">
-                    <Button label="No" icon="pi pi-times" @click="closeConfirmation" class="p-button-text p-button-secondary" />
-                    <Button label="Yes" icon="pi pi-check" @click="changeRegionStatus" class="p-button-text p-button-danger" />
-                </div>
-            </template>
-        </Dialog>
 
         <!-- Diálogo de creación de región -->
         <Dialog v-model:visible="isRegionDialogVisible" modal header="Create Region">
@@ -286,21 +265,11 @@ export default {
                     </div>
                 </div>
                  <!-- Contenedor para alinear el botón al final -->
-        <div class="flex justify-end mt-4">
-            <Button type="submit" label="Create" class="p-button-primary" />
-        </div>
+                 <div class="flex justify-end mt-4">
+                    <Button id="close-button" label="Close" @click="handleClose" style="margin-right: 8px" />
+                    <Button id="create-button" type="submit" label="Create" />
+                </div>
             </form>
-        </Dialog>
-
-        <!-- Diálogo de detalles de región -->
-        <Dialog v-model:visible="isShowDialogVisible" header="Region Details" modal :style="{ 'max-width': '20vw', width: '20vw' }">
-            <div v-if="detailRegionData" class="flex flex-col gap-4">
-                <p><strong>Name:</strong> {{ detailRegionData.nameRegion }}</p>
-                <p><strong>Description:</strong> {{ detailRegionData.description }}</p>
-                <p>
-                    <strong>Status:</strong> <span :class="detailRegionData.status ? 'text-green-500' : 'text-red-500'">{{ detailRegionData.status ? 'Active' : 'Inactive' }}</span>
-                </p>
-            </div>
         </Dialog>
 
         <!-- Diálogo de edición de región -->
@@ -318,12 +287,35 @@ export default {
                         </div>
                     </div>
                 </div>
-               <!-- Contenedor para alinear el botón al final -->
-        <div class="flex justify-end mt-4">
-            <Button type="submit" label="Save" class="p-button-primary" />
-        </div>
+                 <!-- Contenedor para alinear el botón al final -->
+                 <div class="flex justify-end mt-4">
+                    <Button id="close-button" label="Close" @click="handleClose" style="margin-right: 8px" />
+                    <Button id="create-button" type="submit" label="Save" />
+                </div>
             </form>
         </Dialog>
+        <!-- Diálogo de confirmación eliminar -->
+        <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
+            <p>Are you sure you want to delete this region?</p>
+            <template #footer>
+                <div class="flex justify-end gap-2">
+                    <Button label="No" icon="pi pi-times" @click="closeDeleteConfirmation" class="p-button-text p-button-secondary" />
+                    <Button label="Yes" icon="pi pi-check" @click="deleteRegion" class="p-button-text p-button-danger" />
+                </div>
+            </template>
+        </Dialog>
+
+        <!-- Diálogo de confirmación inactivar -->
+        <Dialog v-model:visible="displayConfirmation" header="Confirmation" modal class="max-w-sm">
+            <p>Are you sure you want to proceed with this action?</p>
+            <template #footer>
+                <div class="flex justify-end gap-2">
+                    <Button label="No" icon="pi pi-times" @click="closeConfirmation" class="p-button-text p-button-secondary" />
+                    <Button label="Yes" icon="pi pi-check" @click="changeRegionStatus" class="p-button-text p-button-danger" />
+                </div>
+            </template>
+        </Dialog>
+
     </div>
 </template>
 
@@ -340,5 +332,29 @@ export default {
 /* Opcional: para añadir algo de espacio debajo del input */
 .input-with-line {
     margin-bottom: 0.5rem; /* Espacio debajo del campo de entrada */
+}
+
+#close-button {
+  background: #614d56;
+  color: white;
+  border-color: #614d56;
+}
+
+#close-button:hover {
+  background: white;
+  color: #614d56;
+  border-color: #614d56;
+}
+
+#create-button {
+  background: #64c4ac;
+  color: white;
+  border-color: #64c4ac;
+}
+
+#create-button:hover {
+  background: white;
+  color: #64c4ac;
+  border-color: #64c4ac;
 }
 </style>

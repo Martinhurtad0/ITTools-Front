@@ -3,10 +3,10 @@ import { computed, reactive, readonly, onMounted } from 'vue';
 // Configuración inicial del layout
 const layoutConfig = reactive({
     preset: 'Aura',
-    primary: '#64c4ac', 
+    primary: 'teal',
     surface: 'soho',
     darkTheme: false,
-    menuMode: 'static' // Asegura que el menú sea estático
+    menuMode: 'static'
 });
 
 const layoutState = reactive({
@@ -17,26 +17,23 @@ const layoutState = reactive({
     staticMenuMobileActive: false,
     menuHoverActive: false,
     activeMenuItem: null,
-    sidebarCollapsed: false // Añadir esta línea
+    sidebarCollapsed: false,
+    activeSubMenuItems: {} // Añadido para rastrear el estado de los submenús
 });
 
-
 export function useLayout() {
-    // Función para aplicar colores al DOM
     const applyColors = () => {
         document.documentElement.style.setProperty('--primary-color', layoutConfig.primary);
         document.documentElement.style.setProperty('--surface-color', layoutConfig.surface);
     };
 
     onMounted(() => {
-        // Recuperar el modo oscuro del almacenamiento local
         const savedDarkMode = localStorage.getItem('darkTheme');
         if (savedDarkMode === 'true') {
             layoutConfig.darkTheme = true;
             document.documentElement.classList.add('app-dark');
         }
 
-        // Recuperar los valores de primary y surface desde el localStorage
         const savedPrimary = localStorage.getItem('primary');
         if (savedPrimary) {
             layoutConfig.primary = savedPrimary;
@@ -47,22 +44,23 @@ export function useLayout() {
             layoutConfig.surface = savedSurface;
         }
 
-        // Aplicar colores al montar el componente
         applyColors();
     });
 
-    // Guardar y cambiar el color primario
-    const setPrimary = (value) => {
-        layoutConfig.primary = value || '#64c4ac'; // Cambia a #64c4ac
-        localStorage.setItem('primary', layoutConfig.primary); // Guardar en localStorage
-        applyColors(); // Aplicar colores
+    const setSidebarState = (collapsed) => {
+        layoutState.sidebarCollapsed = collapsed;
     };
 
-    // Guardar y cambiar el surface
+    const setPrimary = (value) => {
+        layoutConfig.primary = value || 'teal';
+        localStorage.setItem('primary', layoutConfig.primary);
+        applyColors();
+    };
+
     const setSurface = (value) => {
         layoutConfig.surface = value || 'soho';
-        localStorage.setItem('surface', layoutConfig.surface); // Guardar en localStorage
-        applyColors(); // Aplicar colores
+        localStorage.setItem('surface', layoutConfig.surface);
+        applyColors();
     };
 
     const setPreset = (value) => {
@@ -96,20 +94,19 @@ export function useLayout() {
         if (layoutConfig.menuMode === 'overlay') {
             layoutState.overlayMenuActive = !layoutState.overlayMenuActive;
         }
-    
+
         if (window.innerWidth > 991) {
-            layoutState.staticMenuDesktopInactive = !layoutState.staticMenuDesktopInactive;
-            layoutState.sidebarCollapsed = !layoutState.sidebarCollapsed; // Añadir esta línea
+            layoutState.sidebarCollapsed = !layoutState.sidebarCollapsed;
         } else {
             layoutState.staticMenuMobileActive = !layoutState.staticMenuMobileActive;
         }
     };
-    
 
     const resetMenu = () => {
         layoutState.overlayMenuActive = false;
         layoutState.staticMenuMobileActive = false;
         layoutState.menuHoverActive = false;
+        layoutState.activeSubMenuItems = {}; // Restablecer el estado de los submenús
     };
 
     const isSidebarActive = computed(() => layoutState.overlayMenuActive || layoutState.staticMenuMobileActive);
@@ -125,6 +122,7 @@ export function useLayout() {
         layoutState: readonly(layoutState),
         onMenuToggle,
         isSidebarActive,
+        setSidebarState,
         isDarkTheme,
         getPrimary,
         getSurface,

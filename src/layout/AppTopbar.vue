@@ -3,7 +3,7 @@ import { useLayout } from '@/layout/composables/layout';
 import { useRouter } from 'vue-router'; // Importa useRouter para redireccionar
 import logo from '@/assets/emida-logo-square.png'; // Importa la imagen
 
-const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
+const { toggleDarkMode, isDarkTheme } = useLayout();
 const router = useRouter();
 
 const logout = () => {
@@ -20,9 +20,7 @@ const logout = () => {
       </router-link>
     </div>
 
-    <button class="layout-menu-button layout-topbar-action" @click="onMenuToggle">
-      <i class="pi pi-bars"></i>
-    </button>
+
 
     <div class="layout-topbar-actions">
       <div class="layout-config-menu">

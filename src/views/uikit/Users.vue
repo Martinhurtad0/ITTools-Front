@@ -102,10 +102,16 @@ export default {
         await this.loadUsers();
     },
     methods: {
-        openCreateUserDialog() {
-            this.resetForm(); // Limpia el formulario al abrir el diálogo de creación
-            this.isCreateUserDialogVisible = true;
+        async loadUsers() {
+            try {
+                this.users = await authService.getUsers();
+                // Filtra solo los usuarios activos por defecto
+                this.filteredUsers = this.users.filter((user) => user.status);
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
         },
+
         async registerUser() {
             try {
                 this.editUserData.roles = this.selectedRoles;
@@ -118,14 +124,61 @@ export default {
                 this.showError(err.message || 'Registration failed');
             }
         },
-        async loadUsers() {
+
+        async updateUser() {
             try {
-                this.users = await authService.getUsers();
-                // Filtra solo los usuarios activos por defecto
-                this.filteredUsers = this.users.filter((user) => user.status);
-            } catch (error) {
-                console.error('Error fetching users:', error);
+                await authService.updateUser(this.editUserData);
+                this.showSuccess('User updated successfully');
+                await this.loadUsers();
+                this.resetForm();
+                this.isEditDialogVisible = false;
+            } catch (err) {
+                this.showError(err.message || 'Update failed');
             }
+        },
+        async deleteUser() {
+            try {
+                await authService.deleteUser(this.userToDelete);
+                this.showSuccess('User deleted successfully');
+                await this.loadUsers();
+                this.displayDeleteConfirmation = false;
+                this.userToDelete = null;
+            } catch (err) {
+                this.showError(this.error || 'Delete failed');
+            }
+        },
+        async changeUserStatus() {
+            try {
+                const updatedUser = { ...this.userToChangeStatus, status: this.isActivating };
+                await authService.updateUser(updatedUser);
+                this.showSuccess('User status changed successfully');
+                await this.loadUsers();
+                this.displayConfirmation = false;
+
+                // Aplicar el filtro después de cargar los usuarios
+                this.filterUsers();
+            } catch (err) {
+                this.showError(this.error || 'Status change failed');
+            }
+        },
+
+        async handleClose() {
+            this.isCreateUserDialogVisible = false;
+            this.isEditDialogVisible = false;
+        },
+        openConfirmation(user, isActivating) {
+            this.userToChangeStatus = user;
+            this.isActivating = isActivating;
+            this.displayConfirmation = true;
+        },
+
+        closeConfirmation() {
+            this.displayConfirmation = false;
+            this.userToChangeStatus = null;
+        },
+        closeDeleteConfirmation() {
+            this.displayDeleteConfirmation = false;
+            this.userToDelete = null;
         },
         resetForm() {
             this.user = {
@@ -151,54 +204,9 @@ export default {
             this.userToDelete = userId;
             this.displayDeleteConfirmation = true;
         },
-        async updateUser() {
-            try {
-                await authService.updateUser(this.editUserData);
-                this.showSuccess('User updated successfully');
-                await this.loadUsers();
-                this.resetForm();
-                this.isEditDialogVisible = false;
-            } catch (err) {
-                this.showError(err.message || 'Update failed');
-            }
-        },
-        async deleteUser() {
-            try {
-                await authService.deleteUser(this.userToDelete);
-                this.showSuccess('User deleted successfully');
-                await this.loadUsers();
-                this.displayDeleteConfirmation = false;
-                this.userToDelete = null;
-            } catch (err) {
-                this.showError(this.error || 'Delete failed');
-            }
-        },
-        openConfirmation(user, isActivating) {
-            this.userToChangeStatus = user;
-            this.isActivating = isActivating;
-            this.displayConfirmation = true;
-        },
-        async changeUserStatus() {
-        try {
-            const updatedUser = { ...this.userToChangeStatus, status: this.isActivating };
-            await authService.updateUser(updatedUser);
-            this.showSuccess('User status changed successfully');
-            await this.loadUsers();
-            this.displayConfirmation = false;
-
-            // Aplicar el filtro después de cargar los usuarios
-            this.filterUsers();
-        } catch (err) {
-            this.showError(this.error || 'Status change failed');
-        }
-    },
-        closeConfirmation() {
-            this.displayConfirmation = false;
-            this.userToChangeStatus = null;
-        },
-        closeDeleteConfirmation() {
-            this.displayDeleteConfirmation = false;
-            this.userToDelete = null;
+        openCreateUserDialog() {
+            this.resetForm(); // Limpia el formulario al abrir el diálogo de creación
+            this.isCreateUserDialogVisible = true;
         },
         filterUsers() {
             this.filteredUsers = this.users.filter((user) => {
@@ -231,8 +239,8 @@ export default {
                 <div class="flex justify-between items-center mb-2">
                     <!-- Agrupar los dos botones en un div con clase flex -->
                     <div class="flex gap-2">
-                        <Button label="Create User" icon="pi pi-plus" @click="openCreateUserDialog" />
-                        <Button label="Filter All" icon="pi pi-filter" class="p-button-secondary" @click="toggleFilter" style="background-color: rgb(104, 76, 84); border-color: rgb(104, 76, 84); color: white" />
+                        <Button label="Create User" icon="pi pi-plus" id="create-button"  @click="openCreateUserDialog" />
+                        <Button label="Filter All" icon="pi pi-filter" id="close-button" @click="toggleFilter" />
                     </div>
                     <!-- Input de búsqueda al otro lado -->
                     <InputText v-model="searchQuery" placeholder="Global search..." class="p-inputtext p-component" />
@@ -269,91 +277,55 @@ export default {
             </div>
         </div>
 
-        <!-- Diálogo de detalle de usuario -->
-        <Dialog v-model:visible="isShowDialogVisible" header="User Details" modal :style="{ 'max-width': '25vw', width: '25vw' }">
-            <div class="flex flex-col gap-4">
-                <div><strong>Email:</strong> {{ detailUserData.email }}</div>
-                <div><strong>Full Name:</strong> {{ detailUserData.full_name }}</div>
-                <div><strong>Charge:</strong> {{ detailUserData.charge }}</div>
-                <div><strong>Area:</strong> {{ detailUserData.area }}</div>
-                <div><strong>Roles:</strong> {{ detailUserData.roles.join(', ') }}</div>
-                <div>
-                    <strong>Status:</strong> <span :class="detailUserData.status ? 'text-green-500' : 'text-red-500'">{{ detailUserData.status ? 'Active' : 'Inactive' }}</span>
-                </div>
-            </div>
-        </Dialog>
-<!-- Diálogo de creación de usuario -->
-<Dialog v-model:visible="isCreateUserDialogVisible" header="Create User" modal :style="{ 'max-width': '30vw', width: '30vw' }">
-    <form @submit.prevent="registerUser">
-        <div class="flex gap-4">
-            <!-- Sección de Inputs -->
-            <div class="flex flex-col w-1/2 gap-4">
-                <div class="flex flex-wrap gap-4">
-                    <div class="flex flex-col grow basis-0 gap-2">
-                        <label for="emailCreate">Email</label>
-                        <InputText id="emailCreate" type="email" v-model="editUserData.email" class="p-inputtext-sm input-with-line" placeholder="Enter Email" required />
+        <!-- Diálogo de creación de usuario -->
+        <Dialog v-model:visible="isCreateUserDialogVisible" header="Create User" modal :style="{ 'max-width': '30vw', width: '30vw' }">
+            <form @submit.prevent="registerUser">
+                <div class="flex gap-4">
+                    <!-- Sección de Inputs -->
+                    <div class="flex flex-col w-1/2 gap-4">
+                        <div class="flex flex-wrap gap-4">
+                            <div class="flex flex-col grow basis-0 gap-2">
+                                <label for="emailCreate">Email</label>
+                                <InputText id="emailCreate" type="email" v-model="editUserData.email" class="p-inputtext-sm input-with-line" placeholder="Enter Email" required />
+                            </div>
+                            <div class="flex flex-col grow basis-0 gap-2">
+                                <label for="passwordCreate">Password</label>
+                                <InputText id="passwordCreate" type="password" v-model="editUserData.password" class="p-inputtext-sm input-with-line" placeholder="Enter Password" required />
+                            </div>
+                            <div class="flex flex-col grow basis-0 gap-2">
+                                <label for="full_nameCreate">Full Name</label>
+                                <InputText id="full_nameCreate" type="text" v-model="editUserData.full_name" class="p-inputtext-sm input-with-line" placeholder="Enter Full Name" required />
+                            </div>
+                            <div class="flex flex-col grow basis-0 gap-2">
+                                <label for="chargeCreate">Charge</label>
+                                <InputText id="chargeCreate" type="text" v-model="editUserData.charge" class="p-inputtext-sm input-with-line" placeholder="Enter Charge" required />
+                            </div>
+                            <div class="flex flex-col grow basis-0 gap-2">
+                                <label for="areaCreate">Area</label>
+                                <InputText id="areaCreate" type="text" v-model="editUserData.area" class="p-inputtext-sm input-with-line" placeholder="Enter Area" required />
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex flex-col grow basis-0 gap-2">
-                        <label for="passwordCreate">Password</label>
-                        <InputText id="passwordCreate" type="password" v-model="editUserData.password" class="p-inputtext-sm input-with-line" placeholder="Enter Password" required />
-                    </div>
-                    <div class="flex flex-col grow basis-0 gap-2">
-                        <label for="full_nameCreate">Full Name</label>
-                        <InputText id="full_nameCreate" type="text" v-model="editUserData.full_name" class="p-inputtext-sm input-with-line" placeholder="Enter Full Name" required />
-                    </div>
-                    <div class="flex flex-col grow basis-0 gap-2">
-                        <label for="chargeCreate">Charge</label>
-                        <InputText id="chargeCreate" type="text" v-model="editUserData.charge" class="p-inputtext-sm input-with-line" placeholder="Enter Charge" required />
-                    </div>
-                    <div class="flex flex-col grow basis-0 gap-2">
-                        <label for="areaCreate">Area</label>
-                        <InputText id="areaCreate" type="text" v-model="editUserData.area" class="p-inputtext-sm input-with-line" placeholder="Enter Area" required />
+                    <!-- Sección de Roles -->
+                    <div class="flex flex-col w-1/2 gap-2 pl-12">
+                        <!-- Añadido padding-left para espaciar -->
+                        <label>Roles</label>
+                        <div v-for="role in roles" :key="role.id" class="flex items-center">
+                            <Checkbox v-model="selectedRoles" :value="role.authority" class="mr-2" />
+                            <label>{{ role.authority }}</label>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <!-- Sección de Roles -->
-            <div class="flex flex-col w-1/2 gap-2 pl-12">
-                <!-- Añadido padding-left para espaciar -->
-                <label>Roles</label>
-                <div v-for="role in roles" :key="role.id" class="flex items-center">
-                    <Checkbox v-model="selectedRoles" :value="role.authority" class="mr-2" />
-                    <label>{{ role.authority }}</label>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Contenedor para alinear el botón al final -->
-        <div class="flex justify-end mt-4">
-            <Button type="submit" label="Create" class="p-button-primary" />
-        </div>
-    </form>
-</Dialog>
 
-        <!-- Diálogo de confirmación borrar -->
-        <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
-            <p>Are you sure you want to delete this user?</p>
-            <template #footer>
-                <div class="flex justify-end gap-2">
-                    <Button label="No" icon="pi pi-times" @click="closeDeleteConfirmation" class="p-button-text p-button-secondary" />
-                    <Button label="Yes" icon="pi pi-check" @click="deleteUser" class="p-button-text p-button-danger" />
+                <!-- Contenedor para alinear el botón al final -->
+                <div class="flex justify-end mt-4">
+                    <Button id="close-button" label="Close" @click="handleClose" style="margin-right: 8px" />
+                    <Button id="create-button" type="submit" label="Create" />
                 </div>
-            </template>
+            </form>
         </Dialog>
 
-        <!-- Diálogo de confirmación inactivar-->
-        <Dialog v-model:visible="displayConfirmation" header="Confirmation" modal class="max-w-sm">
-            <p>Are you sure you want to proceed with this action?</p>
-            <!-- Mensaje de confirmación -->
-            <template #footer>
-                <div class="flex justify-end gap-2">
-                    <!-- Ajusta la disposición de los botones -->
-                    <Button label="No" icon="pi pi-times" @click="closeConfirmation" class="p-button-text p-button-secondary" />
-                    <Button label="Yes" icon="pi pi-check" @click="changeUserStatus" class="p-button-text p-button-danger" />
-                </div>
-            </template>
-        </Dialog>
-
-        <!-- Diálogo de edición -->
+        <!-- Diálogo de edición de usuario-->
         <Dialog v-model:visible="isEditDialogVisible" header="Edit User" modal :style="{ 'max-width': '30vw', width: '30vw' }">
             <form @submit.prevent="updateUser">
                 <div class="flex gap-4">
@@ -392,13 +364,51 @@ export default {
                     </div>
                 </div>
 
-                 <!-- Contenedor para alinear el botón al final -->
-        <div class="flex justify-end mt-4">
-            <Button type="submit" label="Save" class="p-button-primary" />
-        </div>
+                <!-- Contenedor para alinear el botón al final -->
+                 <div class="flex justify-end mt-4">
+                    <Button id="close-button" label="Close" @click="handleClose" style="margin-right: 8px" />
+                    <Button id="create-button" type="submit" label="Save" />
+                </div>
             </form>
         </Dialog>
     </div>
+    <!-- Diálogo de detalle de usuario -->
+    <Dialog v-model:visible="isShowDialogVisible" header="User Details" modal :style="{ 'max-width': '25vw', width: '25vw' }">
+        <div class="flex flex-col gap-4">
+            <div><strong>Email:</strong> {{ detailUserData.email }}</div>
+            <div><strong>Full Name:</strong> {{ detailUserData.full_name }}</div>
+            <div><strong>Charge:</strong> {{ detailUserData.charge }}</div>
+            <div><strong>Area:</strong> {{ detailUserData.area }}</div>
+            <div><strong>Roles:</strong> {{ detailUserData.roles.join(', ') }}</div>
+            <div>
+                <strong>Status:</strong> <span :class="detailUserData.status ? 'text-green-500' : 'text-red-500'">{{ detailUserData.status ? 'Active' : 'Inactive' }}</span>
+            </div>
+        </div>
+    </Dialog>
+
+    <!-- Diálogo de confirmación borrar -->
+    <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
+        <p>Are you sure you want to delete this user?</p>
+        <template #footer>
+            <div class="flex justify-end gap-2">
+                <Button label="No" icon="pi pi-times" @click="closeDeleteConfirmation" class="p-button-text p-button-secondary" />
+                <Button label="Yes" icon="pi pi-check" @click="deleteUser" class="p-button-text p-button-danger" />
+            </div>
+        </template>
+    </Dialog>
+
+    <!-- Diálogo de confirmación inactivar-->
+    <Dialog v-model:visible="displayConfirmation" header="Confirmation" modal class="max-w-sm">
+        <p>Are you sure you want to proceed with this action?</p>
+        <!-- Mensaje de confirmación -->
+        <template #footer>
+            <div class="flex justify-end gap-2">
+                <!-- Ajusta la disposición de los botones -->
+                <Button label="No" icon="pi pi-times" @click="closeConfirmation" class="p-button-text p-button-secondary" />
+                <Button label="Yes" icon="pi pi-check" @click="changeUserStatus" class="p-button-text p-button-danger" />
+            </div>
+        </template>
+    </Dialog>
 </template>
 
 <style scoped>
@@ -414,5 +424,29 @@ export default {
 /* Opcional: para añadir algo de espacio debajo del input */
 .input-with-line {
     margin-bottom: 0.5rem; /* Espacio debajo del campo de entrada */
+}
+
+#close-button {
+  background: #614d56;
+  color: white;
+  border-color: #614d56;
+}
+
+#close-button:hover {
+  background: white;
+  color: #614d56;
+  border-color: #614d56;
+}
+
+#create-button {
+  background: #64c4ac;
+  color: white;
+  border-color: #64c4ac;
+}
+
+#create-button:hover {
+  background: white;
+  color: #64c4ac;
+  border-color: #64c4ac;
 }
 </style>

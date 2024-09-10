@@ -4,6 +4,7 @@ import Dropdown from 'primevue/dropdown';
 import RadioButton from 'primevue/radiobutton'; // Importar RadioButton
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
+import Calendar from 'primevue/calendar';
 import { regionService } from '@/services/RegionService';
 import { serverService } from '@/services/AgentService';
 
@@ -12,7 +13,8 @@ export default {
         Dropdown,
         RadioButton, // Registrar RadioButton
         InputText,
-        Button
+        Button,
+        Calendar
     },
     setup() {
         const regions = ref([]);
@@ -20,6 +22,7 @@ export default {
         const selectedRegion = ref(null);
         const filteredAgents = ref([]);
         const selectedAgent = ref(null); // Para almacenar el agente seleccionado
+        const transactionDate = ref(null); // Para almacenar la fecha seleccionada
 
         async function loadRegions() {
             try {
@@ -61,7 +64,8 @@ export default {
             agents,
             selectedRegion,
             filteredAgents,
-            selectedAgent
+            selectedAgent,
+            transactionDate
         };
     }
 };
@@ -80,7 +84,7 @@ export default {
 
                 <div class="mb-6">
                     <label for="last-modified" class="block text-sm font-medium mb-2">Last Modified</label>
-                    <input id="last-modified" type="date" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 date-input" />
+                    <Calendar id="last-modified" v-model="transactionDate" class="w-full" placeholder="Select Date" />
                 </div>
 
                 <div class="mb-6">
@@ -102,9 +106,9 @@ export default {
             <!-- Div para la segunda mitad -->
             <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
                 <div class="font-semibold text-xl mb-4">Log Files</div>
-                <div>
-                    <Button label="Send" class="w-full p-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
+                <div class="flex justify-end mt-4">
+                        <Button id="create-button" type="submit" label="Send" icon="pi pi-send" />
+                    </div>
             </div>
         </div>
     </div>
@@ -128,5 +132,17 @@ input[type='date'],
 /* Margen adicional para radio buttons */
 .radio-margin {
     margin-left: 1rem; /* Ajusta el margen según sea necesario */
+}
+
+#create-button {
+  background: #64c4ac;
+  color: white;
+  border-color: #64c4ac;
+}
+
+#create-button:hover {
+  background: white;
+  color: #64c4ac;
+  border-color: #64c4ac;
 }
 </style>
