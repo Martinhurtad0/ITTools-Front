@@ -6,13 +6,17 @@ import Dropdown from 'primevue/dropdown';
 import InputText from 'primevue/inputtext';
 import RadioButton from 'primevue/radiobutton';
 import { onMounted, ref, watch } from 'vue';
+import Calendar from 'primevue/calendar'; // Importar Calendar
+import { regionService } from '@/services/RegionService';
+import { serverService } from '@/services/AgentService';
 
 export default {
     components: {
         Dropdown,
         RadioButton,
         InputText,
-        Button
+        Button,
+        Calendar // Registrar Calendar
     },
     setup() {
         const regions = ref([]);
@@ -24,6 +28,8 @@ export default {
         const logs = ref([]); // Logs que se mostrarán
         const selectedLogs = ref([]); // Logs seleccionados para descargar
         const downloadUrl = ref(''); // URL de descarga del archivo ZIP
+
+        const date = ref(null); // Para almacenar la fecha seleccionada
 
         async function loadRegions() {
             try {
@@ -114,7 +120,8 @@ export default {
             selectedLogs,
             downloadUrl,
             fetchLogs,
-            downloadLogs // Asegúrate de que este nombre coincida con el nombre usado en el template
+            downloadLogs, // Asegúrate de que este nombre coincida con el nombre usado en el template
+            date // Añadir 'date' a la lista de variables reactivas
         };
     }
 };
@@ -143,11 +150,11 @@ export default {
 
                 <div class="mb-6">
                     <label for="last-modified" class="block text-sm font-medium mb-2">Last Modified</label>
-                    <input 
-                        id="last-modified" 
-                        type="date" 
-                        v-model="selectedDate" 
-                        class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 date-input" 
+                    <Calendar
+                        id="last-modified"
+                        v-model="date"
+                        class="w-full"
+                        placeholder="Select Date"
                     />
                 </div>
 
@@ -159,7 +166,7 @@ export default {
                                 <RadioButton v-model="selectedAgent" :value="agent.idAgent" name="agent" />
                                 <span class="text-sm">{{ agent.agentName }}</span>
                                 <span class="text-sm">||</span>
-                                <span class="text-sm">{{ agent.ipAgent }}</span>
+                                <span class="text-sm">{{ agent.ipagent }}</span>
                             </div>
                         </div>
                         <div v-if="filteredAgents.length === 0" class="text-sm text-gray-500 mt-2">No agents found for the selected region</div>
@@ -208,16 +215,9 @@ export default {
 </template>
 
 <style scoped>
-/* Asegurar que el input de fecha tenga el mismo tamaño que el InputText */
-.date-input {
-    height: calc(1.5em + 1rem + 2px); /* Altura del input ajustada para que coincida con InputText */
-    padding: 0.75rem; /* Relleno consistente con InputText */
-}
-
 /* Asegurar que todos los campos de entrada sean del mismo tamaño */
-input[type='date'],
-.p-inputtext {
-    width: 100%; /* Asegura que el input ocupe el 100% del ancho del contenedor */
+.p-calendar {
+    width: 100%; /* Asegura que el calendario ocupe el 100% del ancho del contenedor */
     border-radius: 0.375rem; /* Radio de borde consistente */
     border: 1px solid #d1d5db; /* Borde consistente */
 }
@@ -226,30 +226,16 @@ input[type='date'],
 .radio-margin {
     margin-left: 1rem; /* Ajusta el margen según sea necesario */
 }
-</style>
 
-
-
-
-
-
-<style scoped>
-/* Asegurar que el input de fecha tenga el mismo tamaño que el InputText */
-.date-input {
-    height: calc(1.5em + 1rem + 2px); /* Altura del input ajustada para que coincida con InputText */
-    padding: 0.75rem; /* Relleno consistente con InputText */
+#create-button {
+  background: #64c4ac;
+  color: white;
+  border-color: #64c4ac;
 }
 
-/* Asegurar que todos los campos de entrada sean del mismo tamaño */
-input[type='date'],
-.p-inputtext {
-    width: 100%; /* Asegura que el input ocupe el 100% del ancho del contenedor */
-    border-radius: 0.375rem; /* Radio de borde consistente */
-    border: 1px solid #d1d5db; /* Borde consistente */
-}
-
-/* Margen adicional para radio buttons */
-.radio-margin {
-    margin-left: 1rem; /* Ajusta el margen según sea necesario */
+#create-button:hover {
+  background: white;
+  color: #64c4ac;
+  border-color: #64c4ac;
 }
 </style>

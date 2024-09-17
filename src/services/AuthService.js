@@ -90,8 +90,9 @@ export const authService = {
       const response = await axios.put(`/users/${userData.id}`, userData);
       return response.data;
     } catch (error) {
-      console.error('Update failed:', error);
-      throw new Error(error.response?.data || 'Update failed');
+      // Extract and format the error message
+      const message = error.message || 'Update failed';
+      throw new Error(message);
     }
   }
 
@@ -99,13 +100,13 @@ export const authService = {
 };
 
 
-
 export const registerUser = async (userData) => {
   try {
     const response = await axios.post('/auth/register', userData);
-    return response.data;
+    return response.data; // Return response data if successful
   } catch (error) {
-    console.error('Registration failed:', error);
-    throw new Error(error.response?.data || 'Registration failed');
+    // Extract and format the error message
+    const message = error.message || 'Registration failed';
+    throw new Error(message);
   }
 };

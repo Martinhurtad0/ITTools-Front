@@ -6,7 +6,9 @@ export const serverService = {
       const response = await axios.post('api/agents/register', serverData); // El token y la baseURL se manejan automáticamente
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Error creating server');
+      // Extract and format the error message
+      const message = error.message || 'Registration failed';
+      throw new Error(message);
     }
   },
 
@@ -33,8 +35,8 @@ export const serverService = {
       const response = await axios.put(`api/agents/${agent.idAgent}`, agent); // El token y la baseURL se manejan automáticamente
       return response.data;
     } catch (error) {
-      console.error('Error updating server:', error);
-      throw error; // Lanzar el error para que pueda ser manejado en el componente
+      const message = error.message || 'Update failed';
+      throw new Error(message);
     }
   },
 

@@ -90,7 +90,8 @@ const callback = async (response) => {
                 label="Sign In"
                 type="submit"
                 class="w-full mb-4"
-              />
+                id="create-button"
+              /> 
             </div>
           </form>
 
@@ -119,17 +120,16 @@ const callback = async (response) => {
   margin-right: 1rem;
 }
 
-.btn {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  background-color: var(--primary-color);
-  color: #fff;
-  cursor: pointer;
+#create-button {
+    background: #64c4ac;
+    color: white;
+    border-color: #64c4ac;
 }
 
-.btn-primary {
-  background-color: var(--primary-color);
+#create-button:hover {
+    background: white;
+    color: #64c4ac;
+    border-color: #64c4ac;
 }
 
 #img{

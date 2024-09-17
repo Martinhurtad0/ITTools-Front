@@ -23,13 +23,14 @@ export const regionService = {
 
   async updateRegion(id, region) {
     try {
-      const response = await axios.put(`/api/regions/${id}`, region); // El token se incluye automáticamente
-      return response.data;
+        const response = await axios.put(`/api/regions/${id}`, region); // El token se incluye automáticamente
+        return response.data;
     } catch (error) {
-      console.error('Error updating region:', error.response?.data || error.message);
-      throw error;
+        console.error('Error updating region:', error.response?.data || error.message);
+        throw error;
     }
-  },
+},
+
 
   async updateRegionStatus(id, status) {
     try {
@@ -44,11 +45,16 @@ export const regionService = {
   },
   async deleteRegion(id) {
     try {
-        const response = await axios.delete(`/api/regions/delete/${id}`); // Asegúrate de que esta URL sea correcta
-        return response.data;
-    } catch (error) {
-        console.error('Error deleting region:', error.response?.data || error.message);
-        throw error; // Lanza el error para manejarlo en el componente
+      const response = await axios.delete(`/api/regions/delete/${id}`);
+      return response;
+    } catch (error) {  
+      // Si `error.response` no está definido, utiliza el mensaje de error directamente
+      const message = error.response?.data || error.message || 'Delete failed';
+      throw new Error(message);
     }
-}
+  }
+  
+  
+
+
 };

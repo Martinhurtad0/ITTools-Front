@@ -18,8 +18,9 @@ export const serverService = {
       const response = await axios.post('api/serversdb/register', serverData); // El token y la baseURL se manejan automáticamente
       return response.data;
     } catch (error) {
-      console.error('Error creating server:', error.response?.data || error.message);
-      throw error;
+      // Extract and format the error message
+      const message = error.message || 'Registration failed';
+      throw new Error(message);
     }
   },
 
@@ -28,8 +29,8 @@ export const serverService = {
       const response = await axios.put(`api/serversdb/${id}`, serverData); // El token y la baseURL se manejan automáticamente
       return response.data;
     } catch (error) {
-      console.error('Error updating server:', error.response?.data || error.message);
-      throw error;
+      const message = error.message || 'Update failed';
+      throw new Error(message);
     }
   },
 

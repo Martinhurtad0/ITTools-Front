@@ -56,14 +56,14 @@ export default {
             serverToDelete: null,
             server: {
                 agentName: '',
-                ipAgent: '',
+                ipagent: '',
                 webServiceUrl: '',
                 pathArchive: '',
                 regionId: null
             },
             newServer: {
                 agentName: '',
-                ipAgent: '',
+                ipagent: '',
                 webServiceUrl: '',
                 pathArchive: '',
                 regionId: null
@@ -71,14 +71,14 @@ export default {
             editServerData: {
                 idAgent: null,
                 agentName: '',
-                ipAgent: '',
+                ipagent: '',
                 webServiceUrl: '',
                 pathArchive: '',
                 regionId: null
             },
             detailServerData: {
                 agentName: '',
-                ipAgent: '',
+                ipagent: '',
                 webServiceUrl: '',
                 pathArchive: '',
                 regionId: null
@@ -102,6 +102,84 @@ export default {
         }
     },
     methods: {
+        async loadRegions() {
+            try {
+                const allRegions = await regionService.getAllRegions();
+                this.regions = allRegions.filter((region) => region.status === 1);
+            } catch (error) {
+                console.error('Error fetching regions:', error);
+                this.showError('Error fetching regions');
+            }
+        },
+        async createServer() {
+            if (!this.validateIP(this.newServer.ipagent)) {
+                this.showError('Invalid IP address');
+                return;
+            }
+            try {
+                const serverData = {
+                    agentName: this.newServer.agentName,
+                    ipagent: this.newServer.ipagent,
+                    webServiceUrl: this.newServer.webServiceUrl,
+                    pathArchive: this.newServer.pathArchive,
+                    regionId: this.newServer.regionId ? Number(this.newServer.regionId) : null
+                };
+                await serverService.createServer(serverData);
+                this.showSuccess('Agent created successfully');
+                this.resetNewServerForm();
+                await this.fetchServers();
+                this.closeCreateServerDialog();
+            } catch (error) {
+                this.showError(error.message || 'Registration failed');
+            }
+        },
+        async updateServer() {
+            try {
+                await serverService.updateServer(this.editServerData);
+                await this.fetchServers();
+                this.isEditDialogVisible = false;
+                this.showSuccess('Agent updated successfully');
+            } catch (error) {
+                this.showError(error.message || 'Update failed');
+            }
+        },
+        async deleteAgent() {
+            try {
+                await serverService.deleteAgent(this.serverToDelete);
+                this.showSuccess('Agent deleted successfully');
+                await this.fetchServers();
+                this.displayDeleteConfirmation = false;
+                this.serverToDelete = null;
+            } catch (error) {
+                console.error('Error deleting agent:', error);
+                this.showError(`Error deleting agent: ${error.message}`);
+            }
+        },
+        async changeServerStatus() {
+            try {
+                await this.toggleStatus(this.selectedServer);
+                this.closeConfirmation();
+            } catch (error) {
+                console.error('Error changing server status:', error.message);
+                this.showError('Failed to update server status');
+            }
+        },
+        async toggleStatus(server) {
+            const updatedStatus = server.status === 1 ? 0 : 1;
+            try {
+                await serverService.updateServerStatus(server.idAgent);
+                server.status = updatedStatus;
+                await this.fetchServers();
+                this.showSuccess('Agent status updated successfully');
+            } catch (error) {
+                console.error('Error updating server status:', error.message);
+                this.showError('Failed to update server status');
+            }
+        },
+        async handleClose() {
+            this.closeCreateServerDialog();
+            this.isEditDialogVisible = false;
+        },
         async fetchServers() {
             try {
                 const servers = await serverService.getAllServers();
@@ -115,10 +193,11 @@ export default {
                 this.showError('Error fetching servers');
             }
         },
+
         applyFilters() {
             this.filteredServers = this.servers.filter((server) => {
                 const globalFilter = this.searchQuery.toLowerCase();
-                const matchesSearch = !globalFilter || server.agentName.toLowerCase().includes(globalFilter) || server.ipAgent.toLowerCase().includes(globalFilter) || server.webServiceUrl.toLowerCase().includes(globalFilter);
+                const matchesSearch = !globalFilter || server.agentName.toLowerCase().includes(globalFilter) || server.ipagent.toLowerCase().includes(globalFilter) || server.webServiceUrl.toLowerCase().includes(globalFilter);
                 const matchesActiveFilter = this.showAll || server.status === 1;
                 return matchesSearch && matchesActiveFilter;
             });
@@ -143,38 +222,7 @@ export default {
             this.serverToDelete = serverId;
             this.displayDeleteConfirmation = true;
         },
-        async updateServer() {
-            try {
-                await serverService.updateServer(this.editServerData);
-                await this.fetchServers();
-                this.isEditDialogVisible = false;
-                this.showSuccess('Agent updated successfully');
-            } catch (error) {
-                console.error('Error updating server:', error);
-                this.showError('Update failed');
-            }
-        },
-        async deleteAgent() {
-            try {
-                await serverService.deleteAgent(this.serverToDelete);
-                this.showSuccess('Agent deleted successfully');
-                await this.fetchServers();
-                this.displayDeleteConfirmation = false;
-                this.serverToDelete = null;
-            } catch (error) {
-                console.error('Error deleting agent:', error);
-                this.showError(`Error deleting agent: ${error.message}`);
-            }
-        },
-        async changeServerStatus() {
-            try {
-                await this.toggleStatus(this.selectedServer);
-                this.closeConfirmation();
-            } catch (error) {
-                console.error('Error changing server status:', error.message);
-                this.showError('Failed to update server status');
-            }
-        },
+
         openConfirmation(server, isActivating) {
             this.selectedServer = server;
             this.isActivating = isActivating;
@@ -187,57 +235,15 @@ export default {
         openCreateServerDialog() {
             this.isCreateServerDialogVisible = true;
         },
-        async toggleStatus(server) {
-            const updatedStatus = server.status === 1 ? 0 : 1;
-            try {
-                await serverService.updateServerStatus(server.idAgent);
-                server.status = updatedStatus;
-                await this.fetchServers();
-                this.showSuccess('Agent status updated successfully');
-            } catch (error) {
-                console.error('Error updating server status:', error.message);
-                this.showError('Failed to update server status');
-            }
-        },
+
         closeConfirmation() {
             this.displayConfirmation = false;
         },
-        async loadRegions() {
-            try {
-                const allRegions = await regionService.getAllRegions();
-                this.regions = allRegions.filter((region) => region.status === 1);
-            } catch (error) {
-                console.error('Error fetching regions:', error);
-                this.showError('Error fetching regions');
-            }
-        },
-        async createServer() {
-            if (!this.validateIP(this.newServer.ipAgent)) {
-                this.showError('Invalid IP address');
-                return;
-            }
-            try {
-                const serverData = {
-                    agentName: this.newServer.agentName,
-                    ipAgent: this.newServer.ipAgent,
-                    webServiceUrl: this.newServer.webServiceUrl,
-                    pathArchive: this.newServer.pathArchive,
-                    regionId: this.newServer.regionId ? Number(this.newServer.regionId) : null
-                };
-                await serverService.createServer(serverData);
-                this.showSuccess('Agent created successfully');
-                this.resetNewServerForm();
-                await this.fetchServers();
-                this.closeCreateServerDialog();
-            } catch (err) {
-                console.error('Error creating server:', err.message);
-                this.showError(err.message || 'Creation failed');
-            }
-        },
+
         resetNewServerForm() {
             this.newServer = {
                 agentName: '',
-                ipAgent: '',
+                ipagent: '',
                 webServiceUrl: '',
                 pathArchive: '',
                 regionId: null
@@ -247,13 +253,12 @@ export default {
             this.isCreateServerDialogVisible = false;
         },
         validateIP(ip) {
-            const ipAgent = /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$/;
-            return ipAgent.test(ip);
+            const ipagent = /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$/;
+            return ipagent.test(ip);
         }
     }
 };
 </script>
-
 
 <template>
     <div class="flex flex-col h-screen p-4">
@@ -263,8 +268,8 @@ export default {
                 <div class="flex justify-between items-center mb-2">
                     <!-- Agrupar los dos botones en un div con clase flex -->
                     <div class="flex gap-2">
-                        <Button label="Create Agents" icon="pi pi-plus" @click="openCreateServerDialog" class="p-button-success" />
-                        <Button label="Filter All" icon="pi pi-filter" class="p-button-secondary" @click="toggleFilter" />
+                        <Button label="Create User" icon="pi pi-plus" id="create-button" @click="openCreateServerDialog" />
+                        <Button label="Filter All" icon="pi pi-filter" id="close-button"  @click="toggleFilter" />
                     </div>
                     <!-- Input de búsqueda al otro lado -->
                     <InputText v-model="searchQuery" placeholder="Global search..." class="p-inputtext p-component" />
@@ -272,7 +277,7 @@ export default {
                 <div class="overflow-x-auto">
                     <DataTable :value="filteredServers" class="p-datatable-sm" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="servers.length" sortMode="multiple">
                         <Column field="agentName" header="Server Name" sortable />
-                        <Column field="ipAgent" header="IP Agent" sortable />
+                        <Column field="ipagent" header="IP Agent" sortable />
                         <Column field="webServiceUrl" header="WebService URL" sortable />
                         <Column field="pathArchive" header="Path Archive" sortable />
 
@@ -305,6 +310,44 @@ export default {
             </div>
         </div>
 
+        <!-- Diálogo de creación de servidor -->
+        <Dialog header="Create Agent" v-model:visible="isCreateServerDialogVisible" modal :style="{ 'max-width': '30vw', width: '30vw' }">
+            <form @submit.prevent="createServer">
+                <div class="flex gap-4">
+                    <!-- Inputs columna izquierda -->
+                    <div class="flex flex-col w-1/2 gap-4">
+                        <div class="flex flex-col gap-2">
+                            <label for="create_serverName">Server Name</label>
+                            <InputText id="create_serverName" v-model="newServer.agentName" class="p-inputtext-sm input-with-line" placeholder="Enter Server Name" />
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="create_ipagent">IP Address</label>
+                            <InputText id="create_ipagent" v-model="newServer.ipagent" class="p-inputtext-sm input-with-line" placeholder="Enter IP Address" />
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="create_webServiceUrl">Web Service URL</label>
+                            <InputText id="create_webServiceUrl" v-model="newServer.webServiceUrl" class="p-inputtext-sm input-with-line" placeholder="Enter Web Service URL" />
+                        </div>
+                    </div>
+                    <!-- Inputs columna derecha -->
+                    <div class="flex flex-col w-1/2 gap-4">
+                        <div class="flex flex-col gap-2">
+                            <label for="create_pathArchive">Path Archive</label>
+                            <InputText id="create_pathArchive" v-model="newServer.pathArchive" class="p-inputtext-sm input-with-line" placeholder="Enter Path Archive" />
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="create_regionId">Select Region</label>
+                            <Dropdown id="create_regionId" v-model="newServer.regionId" :options="regions" optionLabel="nameRegion" optionValue="idRegion" filter filterPlaceholder="Search..." class="custom-dropdown p-dropdown-sm" />
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-4">
+                    <Button id="close-button" label="Close" @click="handleClose" style="margin-right: 8px" />
+                    <Button id="create-button" type="submit" label="Create" />
+                </div>
+            </form>
+        </Dialog>
+
         <!-- Modal de edición de servidor -->
 
         <Dialog header="Edit Agent" v-model:visible="isEditDialogVisible" modal :style="{ 'max-width': '30vw', width: '30vw' }">
@@ -317,8 +360,8 @@ export default {
                             <InputText id="edit_serverName" type="text" v-model="editServerData.agentName" class="p-inputtext-sm input-with-line" placeholder="Enter Server Name" />
                         </div>
                         <div class="flex flex-col gap-2">
-                            <label for="edit_ipAgent">IP Address</label>
-                            <InputText id="edit_ipAgent" type="text" v-model="editServerData.ipAgent" class="p-inputtext-sm input-with-line" placeholder="Enter IP Address" />
+                            <label for="edit_ipagent">IP Address</label>
+                            <InputText id="edit_ipagent" type="text" v-model="editServerData.ipagent" class="p-inputtext-sm input-with-line" placeholder="Enter IP Address" />
                         </div>
                         <div class="flex flex-col gap-2">
                             <label for="edit_webServiceUrl">Web Service URL</label>
@@ -339,9 +382,10 @@ export default {
                     </div>
                 </div>
 
-                <!-- Sección de Botones -->
-                <div class="flex gap-4 mt-4">
-                    <Button type="submit" label="Save" class="p-button-primary" />
+                <!-- Contenedor para alinear el botón al final -->
+                <div class="flex justify-end mt-4">
+                    <Button id="close-button" label="Close" @click="handleClose" style="margin-right: 8px" />
+                    <Button id="create-button" type="submit" label="Save" />
                 </div>
             </form>
         </Dialog>
@@ -350,7 +394,7 @@ export default {
         <Dialog v-model:visible="isShowDialogVisible" header="Agent Details" modal :style="{ 'max-width': '30vw', width: '30vw' }">
             <div class="flex flex-col gap-4">
                 <div><strong>Servername:</strong> {{ detailServerData.agentName }}</div>
-                <div><strong>IP Address:</strong> {{ detailServerData.ipAgent }}</div>
+                <div><strong>IP Address:</strong> {{ detailServerData.ipagent }}</div>
                 <div><strong>Web Service URL:</strong> {{ detailServerData.webServiceUrl }}</div>
                 <div><strong>Archive Path:</strong> {{ detailServerData.pathArchive }}</div>
                 <div><strong>Region:</strong> {{ getRegionNameById(detailServerData.regionId) }}</div>
@@ -361,44 +405,6 @@ export default {
                     </span>
                 </div>
             </div>
-        </Dialog>
-
-        <!-- Diálogo de creación de servidor -->
-        <Dialog header="Create Agent" v-model:visible="isCreateServerDialogVisible" modal :style="{ 'max-width': '30vw', width: '30vw' }">
-            <form @submit.prevent="createServer">
-                <div class="flex gap-4">
-                    <!-- Inputs columna izquierda -->
-                    <div class="flex flex-col w-1/2 gap-4">
-                        <div class="flex flex-col gap-2">
-                            <label for="create_serverName">Server Name</label>
-                            <InputText id="create_serverName" v-model="newServer.agentName" class="p-inputtext-sm input-with-line" placeholder="Enter Server Name" />
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <label for="create_ipAgent">IP Address</label>
-                            <InputText id="create_ipAgent" v-model="newServer.ipAgent" class="p-inputtext-sm input-with-line" placeholder="Enter IP Address" />
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <label for="create_webServiceUrl">Web Service URL</label>
-                            <InputText id="create_webServiceUrl" v-model="newServer.webServiceUrl" class="p-inputtext-sm input-with-line" placeholder="Enter Web Service URL" />
-                        </div>
-                    </div>
-                    <!-- Inputs columna derecha -->
-                    <div class="flex flex-col w-1/2 gap-4">
-                        <div class="flex flex-col gap-2">
-                            <label for="create_pathArchive">Path Archive</label>
-                            <InputText id="create_pathArchive" v-model="newServer.pathArchive"class="p-inputtext-sm input-with-line" placeholder="Enter Path Archive" />
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <label for="create_regionId">Select Region</label>
-                            <Dropdown id="create_regionId" v-model="newServer.regionId" :options="regions" optionLabel="nameRegion" optionValue="idRegion" filter filterPlaceholder="Search..." class="custom-dropdown p-dropdown-sm" />
-                        </div>
-                    </div>
-                </div>
-                <div class="flex justify-end mt-4">
-                    <Button label="Cancel" class="p-button-text" @click="closeCreateServerDialog" />
-                    <Button label="Create" type="submit" class="p-button-success" />
-                </div>
-            </form>
         </Dialog>
 
         <!-- Diálogo de confirmación borrar -->
@@ -412,7 +418,6 @@ export default {
             </template>
         </Dialog>
 
-        <!-- Modal de confirmación -->
         <!-- Diálogo de confirmación inactivar-->
         <Dialog v-model:visible="displayConfirmation" header="Confirmation" modal class="max-w-sm">
             <p>Are you sure you want to proceed with this action?</p>
@@ -466,5 +471,29 @@ export default {
 
 .p-dropdown .p-dropdown-items {
     font-size: 0.875rem; /* Tamaño de fuente de las opciones */
+}
+
+#close-button {
+  background: #614d56;
+  color: white;
+  border-color: #614d56;
+}
+
+#close-button:hover {
+  background: white;
+  color: #614d56;
+  border-color: #614d56;
+}
+
+#create-button {
+  background: #64c4ac;
+  color: white;
+  border-color: #64c4ac;
+}
+
+#create-button:hover {
+  background: white;
+  color: #64c4ac;
+  border-color: #64c4ac;
 }
 </style>

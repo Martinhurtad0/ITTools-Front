@@ -1,12 +1,12 @@
 import axios from 'axios';
 
-// Configurar Axios
-axios.defaults.baseURL = 'http://192.168.2.148:8080'; // Cambia según tu baseURL
+// Configure Axios
+axios.defaults.baseURL = 'http://192.168.2.148:8080'; // Change according to your baseURL
 
-// Interceptor de solicitud para incluir el token JWT
+// Request interceptor to include the JWT token
 axios.interceptors.request.use(
   config => {
-    const token = localStorage.getItem('token'); // Obtener el token JWT desde localStorage
+    const token = localStorage.getItem('token'); // Get JWT token from localStorage
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -17,19 +17,20 @@ axios.interceptors.request.use(
   }
 );
 
-// Interceptor de respuesta para manejar la expiración del token
+// Response interceptor to handle token expiration
 axios.interceptors.response.use(
   response => response,
   error => {
     if (error.response && error.response.status === 401) {
-      // Eliminar el token JWT del localStorage si el token ha expirado o no es válido
       localStorage.removeItem('token');
-      
-      // Redirigir al usuario a la página de login o inicio
       window.location.href = '/';
     }
-    return Promise.reject(error);
+
+    // Aquí se extrae el mensaje de error del backend
+    const errorMessage = error.response?.data || 'An error occurred';
+    return Promise.reject(new Error(errorMessage));
   }
 );
+
 
 export default axios;

@@ -1,5 +1,10 @@
 <template>
     <ul class="layout-menu">
+        <li class="layout-menu-item">
+            <button class="layout-menu-button layout-topbar-action" @click="onMenuToggle">
+                <i class="pi pi-bars menu-icon"></i>
+            </button>
+        </li>
         <template v-for="(item, i) in model" :key="item.label">
             <app-menu-item v-if="!item.separator" :item="item" :index="i" />
             <li v-if="item.separator" class="menu-separator"></li>
@@ -7,13 +12,19 @@
     </ul>
 </template>
 
+
 <script setup>
 import { ref } from 'vue';
 import AppMenuItem from './AppMenuItem.vue';
+import { useLayout } from '@/layout/composables/layout';
+
+const { onMenuToggle} = useLayout();
+
 
 const model = ref([
+    
     {
-        label: 'Dashboard',
+        label: 'Home',
         icon: 'pi pi-fw pi-home',
         to: '/home'
     },
@@ -58,7 +69,29 @@ const model = ref([
     padding: 0;
     margin: 0;
     list-style: none;
-    margin-top: 1.5rem;
-    margin-left: 1rem;
+    margin-top: 7%;
+    margin-left: 5%;
+}
+
+.layout-menu-item {
+    // Asegura que cada elemento de menú tenga el mismo estilo
+    margin-bottom: 0.5rem;
+}
+
+.layout-menu-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+}
+
+.menu-icon {
+    font-size: 1.4rem; // Ajusta el tamaño del icono según sea necesario
 }
 </style>

@@ -15,7 +15,7 @@ export default {
         Button,
         DataTable,
         Column,
-        Dialog,
+        Dialog
     },
     setup() {
         const toast = useToast();
@@ -67,9 +67,14 @@ export default {
         await this.loadRoles();
     },
     methods: {
-        openCreateRoleDialog() {
-            this.resetForm(); // Limpia el formulario al abrir el diálogo de creación
-            this.isCreateRoleDialogVisible = true;
+        async loadRoles() {
+            try {
+                this.roles = await roleService.getRoles();
+                this.filterRoles(); // Aplica el filtro sin modificar showAll
+            } catch (error) {
+                this.showError('Error fetching roles');
+                console.error('Error fetching roles:', error);
+            }
         },
         async registerRole() {
             try {
@@ -78,18 +83,54 @@ export default {
                 await this.loadRoles();
                 this.isCreateRoleDialogVisible = false;
             } catch (err) {
-                this.showError(this.error || 'Registration failed');
+                this.showError(err.message || 'Registration failed');
             }
         },
-        async loadRoles() {
+        async updateRole() {
             try {
-                this.roles = await roleService.getRoles();
-                this.showAll = false; // Por defecto, solo mostrar roles activos
-                this.filterRoles(); // Aplica el filtro inicial
-            } catch (error) {
-                this.showError('Error fetching roles');
-                console.error('Error fetching roles:', error);
+                await roleService.updateRole(this.editRoleData.id, this.editRoleData);
+                this.showSuccess('Role updated successfully');
+                await this.loadRoles();
+                this.isEditDialogVisible = false;
+            } catch (err) {
+                this.showError(err.message || 'Update failed');
             }
+        },
+        async deleteRole() {
+            try {
+                await roleService.deleteRole(this.roleToDelete);
+                this.showSuccess('Role deleted successfully');
+                await this.loadRoles();
+                this.displayDeleteConfirmation = false;
+                this.roleToDelete = null;
+            } catch (err) {
+                // Muestra el mensaje del backend si está presente
+                this.showError(err.message || 'Deletion failed');
+                this.displayDeleteConfirmation = false;
+            }
+        },
+        async changeRoleStatus() {
+            try {
+                await roleService.updateRole(this.roleToChangeStatus.id, this.roleToChangeStatus);
+                this.showSuccess('Role status changed successfully');
+                await this.loadRoles();
+                this.displayConfirmation = false;
+                this.roleToChangeStatus = null;
+
+                // Aplica el filtro según el valor actual de showAll
+                this.filterRoles();
+            } catch (err) {
+                this.showError(this.error || 'Status change failed');
+            }
+        },
+        async handleClose() {
+            this.isCreateRoleDialogVisible = false;
+            this.isEditDialogVisible = false;
+        },
+
+        openCreateRoleDialog() {
+            this.resetForm(); // Limpia el formulario al abrir el diálogo de creación
+            this.isCreateRoleDialogVisible = true;
         },
         resetForm() {
             this.role = {
@@ -106,43 +147,12 @@ export default {
             this.roleToDelete = roleId;
             this.displayDeleteConfirmation = true;
         },
-        async updateRole() {
-            try {
-                await roleService.updateRole(this.editRoleData.id, this.editRoleData);
-                this.showSuccess('Role updated successfully');
-                await this.loadRoles();
-                this.isEditDialogVisible = false;
-            } catch (err) {
-                this.showError(this.error || 'Update failed');
-            }
-        },
-        async deleteRole() {
-            try {
-                await roleService.deleteRole(this.roleToDelete);
-                this.showSuccess('Role deleted successfully');
-                await this.loadRoles();
-                this.displayDeleteConfirmation = false;
-                this.roleToDelete = null;
-            } catch (err) {
-                this.showError(this.error || 'Delete failed');
-            }
-        },
         openConfirmation(role, isActivating) {
             this.roleToChangeStatus = { ...role, status: isActivating };
             this.isActivating = isActivating;
             this.displayConfirmation = true;
         },
-        async changeRoleStatus() {
-            try {
-                await roleService.updateRole(this.roleToChangeStatus.id, this.roleToChangeStatus);
-                this.showSuccess(`Role ${this.isActivating ? 'activated' : 'deactivated'} successfully`);
-                await this.loadRoles();
-                this.displayConfirmation = false;
-                this.roleToChangeStatus = null;
-            } catch (err) {
-                this.showError(this.error || 'Status change failed');
-            }
-        },
+
         closeConfirmation() {
             this.displayConfirmation = false;
             this.roleToChangeStatus = null;
@@ -174,7 +184,6 @@ export default {
 };
 </script>
 
-
 <template>
     <div class="flex flex-col h-screen p-4">
         <div class="flex-2">
@@ -183,8 +192,8 @@ export default {
                 <div class="flex justify-between items-center mb-2">
                     <!-- Agrupar los dos botones en un div con clase flex -->
                     <div class="flex gap-2">
-                        <Button label="Create Role" icon="pi pi-plus" @click="openCreateRoleDialog" class="p-button-success" />
-                        <Button label="Filter All" icon="pi pi-filter" class="p-button-secondary" @click="toggleFilter" />
+                        <Button label="Create Role" icon="pi pi-plus" id="create-button"  @click="openCreateRoleDialog" />
+                        <Button label="Filter All" icon="pi pi-filter" id="close-button" @click="toggleFilter" />
                     </div>
                     <!-- Input de búsqueda al otro lado -->
                     <InputText v-model="searchQuery" placeholder="Global search..." class="p-inputtext p-component" />
@@ -193,7 +202,7 @@ export default {
                 <div class="overflow-x-auto">
                     <DataTable :value="filteredRoles" class="p-datatable-sm" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="filteredRoles.length" sortMode="multiple">
                         <Column field="authority" header="Name" sortable />
-                        <Column field="description" header="Description" sortable/>
+                        <Column field="description" header="Description" sortable />
                         <Column field="status" header="Status" sortable>
                             <template #body="{ data }">
                                 <span :class="data.status ? 'text-green-500' : 'text-red-500'">{{ data.status ? 'Active' : 'Inactive' }}</span>
@@ -217,46 +226,49 @@ export default {
 
         <!-- Diálogo de creación de rol -->
         <Dialog v-model:visible="isCreateRoleDialogVisible" modal header="Create Role">
-    <form @submit.prevent="registerRole">
-        <div class="flex gap-4">
-            <div class="flex flex-wrap gap-4">
-                <div class="flex flex-col grow basis-0 gap-2">
-                    <label for="nameCreate">Name</label>
-                    <InputText id="nameCreate" type="text" v-model="role.authority" class="p-inputtext-sm input-with-line" placeholder="Enter Role Name" required />
+            <form @submit.prevent="registerRole">
+                <div class="flex gap-4">
+                    <div class="flex flex-wrap gap-4">
+                        <div class="flex flex-col grow basis-0 gap-2">
+                            <label for="nameCreate">Name</label>
+                            <InputText id="nameCreate" type="text" v-model="role.authority" class="p-inputtext-sm input-with-line" placeholder="Enter Role Name" required />
+                        </div>
+                        <div class="flex flex-col grow basis-0 gap-2">
+                            <label for="descriptionCreate">Description</label>
+                            <InputText id="descriptionCreate" type="text" v-model="role.description" class="p-inputtext-sm input-with-line" placeholder="Enter Role Description" required />
+                        </div>
+                    </div>
                 </div>
-                <div class="flex flex-col grow basis-0 gap-2">
-                    <label for="descriptionCreate">Description</label>
-                    <InputText id="descriptionCreate" type="text" v-model="role.description" class="p-inputtext-sm input-with-line" placeholder="Enter Role Description" required />
+                <!-- Contenedor para alinear el botón al final -->
+                <div class="flex justify-end mt-4">
+                    <Button id="close-button" label="Close" @click="handleClose" style="margin-right: 8px" />
+                    <Button id="create-button" type="submit" label="Create" />
                 </div>
-            </div>
-        </div>
-        <Button type="submit" label="Create" class="p-button-primary mt-3" />
-    </form>
-</Dialog>
-
-
+            </form>
+        </Dialog>
 
         <!-- Diálogo de edición de rol -->
         <Dialog v-model:visible="isEditDialogVisible" modal header="Edit Role">
-    <form @submit.prevent="updateRole">
-        <div class="flex gap-4">
-            <div class="flex flex-wrap gap-4">
-                <div class="flex flex-col grow basis-0 gap-2">
-                    <label for="nameEdit">Name</label>
-                    <InputText id="nameEdit" type="text" v-model="editRoleData.authority" class="p-inputtext-sm input-with-line" placeholder="Enter Role Name" required />
+            <form @submit.prevent="updateRole">
+                <div class="flex gap-4">
+                    <div class="flex flex-wrap gap-4">
+                        <div class="flex flex-col grow basis-0 gap-2">
+                            <label for="nameEdit">Name</label>
+                            <InputText id="nameEdit" type="text" v-model="editRoleData.authority" class="p-inputtext-sm input-with-line" placeholder="Enter Role Name" required />
+                        </div>
+                        <div class="flex flex-col grow basis-0 gap-2">
+                            <label for="descriptionEdit">Description</label>
+                            <InputText id="descriptionEdit" type="text" v-model="editRoleData.description" class="p-inputtext-sm input-with-line" placeholder="Enter Role Description" required />
+                        </div>
+                    </div>
                 </div>
-                <div class="flex flex-col grow basis-0 gap-2">
-                    <label for="descriptionEdit">Description</label>
-                    <InputText id="descriptionEdit" type="text" v-model="editRoleData.description" class="p-inputtext-sm input-with-line" placeholder="Enter Role Description" required />
+                <!-- Contenedor para alinear el botón al final -->
+                <div class="flex justify-end mt-4">
+                    <Button id="close-button" label="Close" @click="handleClose" style="margin-right: 8px" />
+                    <Button id="create-button" type="submit" label="Save" />
                 </div>
-            </div>
-        </div>
-        <Button type="submit" label="Save" class="p-button-primary mt-3" />
-    </form>
-</Dialog>
-    
-
-
+            </form>
+        </Dialog>
 
         <!-- Diálogo de confirmación borrar -->
         <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
@@ -268,10 +280,6 @@ export default {
                 </div>
             </template>
         </Dialog>
-        
-
-        
-
 
         <!-- Diálogo de confirmación inactivar-->
         <Dialog v-model:visible="displayConfirmation" header="Confirmation" modal class="max-w-sm">
@@ -301,5 +309,29 @@ export default {
 /* Opcional: para añadir algo de espacio debajo del input */
 .input-with-line {
     margin-bottom: 0.5rem; /* Espacio debajo del campo de entrada */
+}
+
+#close-button {
+  background: #614d56;
+  color: white;
+  border-color: #614d56;
+}
+
+#close-button:hover {
+  background: white;
+  color: #614d56;
+  border-color: #614d56;
+}
+
+#create-button {
+  background: #64c4ac;
+  color: white;
+  border-color: #64c4ac;
+}
+
+#create-button:hover {
+  background: white;
+  color: #64c4ac;
+  border-color: #64c4ac;
 }
 </style>
