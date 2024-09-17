@@ -1,16 +1,16 @@
 <script>
-import { ref, onMounted, watch } from 'vue';
-import Dropdown from 'primevue/dropdown';
-import RadioButton from 'primevue/radiobutton'; // Importar RadioButton
-import InputText from 'primevue/inputtext';
+
+import axios from 'axios';
 import Button from 'primevue/button';
-import { regionService } from '@/services/RegionService';
-import { serverService } from '@/services/AgentService';
+import Dropdown from 'primevue/dropdown';
+import InputText from 'primevue/inputtext';
+import RadioButton from 'primevue/radiobutton';
+import { onMounted, ref, watch } from 'vue';
 
 export default {
     components: {
         Dropdown,
-        RadioButton, // Registrar RadioButton
+        RadioButton,
         InputText,
         Button
     },
@@ -19,12 +19,16 @@ export default {
         const agents = ref([]);
         const selectedRegion = ref(null);
         const filteredAgents = ref([]);
-        const selectedAgent = ref(null); // Para almacenar el agente seleccionado
+        const selectedAgent = ref(null);
+        const selectedDate = ref(''); // Fecha seleccionada
+        const logs = ref([]); // Logs que se mostrarán
+        const selectedLogs = ref([]); // Logs seleccionados para descargar
+        const downloadUrl = ref(''); // URL de descarga del archivo ZIP
 
         async function loadRegions() {
             try {
-                const data = await regionService.getAllRegions();
-                regions.value = data.map((region) => ({ name: region.nameRegion, id: region.idRegion }));
+                const response = await axios.get('/api/regions'); // Ajusta la URL según tu backend
+                regions.value = response.data.map((region) => ({ name: region.nameRegion, id: region.idRegion }));
             } catch (error) {
                 console.error('Error fetching regions:', error.message);
             }
@@ -32,8 +36,8 @@ export default {
 
         async function loadAgents() {
             try {
-                const data = await serverService.getAllServers();
-                agents.value = data.filter((agent) => agent.status === 1);
+                const response = await axios.get('/api/agents'); // Ajusta la URL según tu backend
+                agents.value = response.data.filter((agent) => agent.status === 1);
             } catch (error) {
                 console.error('Error fetching agents:', error.message);
             }
@@ -41,11 +45,54 @@ export default {
 
         function filterAgentsByRegion() {
             if (selectedRegion.value) {
-                filteredAgents.value = agents.value.filter((agent) => {
-                    return agent.regionId == selectedRegion.value;
-                });
+                filteredAgents.value = agents.value.filter((agent) => agent.regionId == selectedRegion.value);
             } else {
                 filteredAgents.value = [];
+            }
+        }
+
+        async function fetchLogs() {
+            if (!selectedAgent.value || !selectedDate.value) {
+                console.error('Please select an agent and a date.');
+                return;
+            }
+
+            try {
+                const token = 'your-token-here'; // Obtén tu token JWT aquí
+                const response = await axios.get(`/logs/${selectedAgent.value}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                logs.value = response.data; // Asigna los logs obtenidos a la variable logs
+            } catch (error) {
+                console.error('Error fetching logs:', error.message);
+            }
+        }
+
+        async function downloadLogs() {
+            if (selectedLogs.value.length === 0) {
+                console.error('Please select at least one log.');
+                return;
+            }
+
+            try {
+                const token = 'your-token-here'; // Asegúrate de proporcionar el token correcto
+                const response = await axios.get(`/logs/download`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                    params: {
+                        logFileNames: selectedLogs.value
+                    },
+                    responseType: 'blob' // Indica que la respuesta será un archivo
+                });
+
+                // Crear un enlace de descarga
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                downloadUrl.value = url;
+            } catch (error) {
+                console.error('Error downloading logs:', error.message);
             }
         }
 
@@ -61,14 +108,20 @@ export default {
             agents,
             selectedRegion,
             filteredAgents,
-            selectedAgent
+            selectedAgent,
+            selectedDate,
+            logs,
+            selectedLogs,
+            downloadUrl,
+            fetchLogs,
+            downloadLogs // Asegúrate de que este nombre coincida con el nombre usado en el template
         };
     }
 };
 </script>
 
 <template>
-     <div class="flex flex-col h-screen p-4">
+    <div class="flex flex-col h-screen p-4">
         <div class="flex gap-6">
             <!-- Div para la primera mitad -->
             <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
@@ -93,6 +146,7 @@ export default {
                     <input 
                         id="last-modified" 
                         type="date" 
+                        v-model="selectedDate" 
                         class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 date-input" 
                     />
                 </div>
@@ -118,14 +172,64 @@ export default {
                 <div class="font-semibold text-xl mb-4">Log Files</div>
                 <div>
                     <Button 
-                        label="Send" 
+                        label="Fetch Logs" 
                         class="w-full p-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                        @click="fetchLogs" 
                     />
+                </div>
+                
+                <!-- Lista de logs -->
+                <div v-if="logs.length > 0" class="mt-4 overflow-y-auto" style="max-height: 300px;"> <!-- Ajusta la altura máxima según sea necesario -->
+                    <h3 class="text-lg font-semibold mb-2">Logs:</h3>
+                    <ul class="list-disc ml-5">
+                        <li v-for="log in logs" :key="log">
+                            <RadioButton type="check" :value="log" v-model="selectedLogs" />
+                            {{ log }}
+                        </li>
+                    </ul>
+                </div>
+                <div v-else class="text-sm text-gray-500 mt-2">No logs available.</div>
+
+                <!-- Botón de descarga de logs en formato ZIP -->
+                <div v-if="selectedLogs.length > 0" class="mt-4">
+                    <Button 
+                        label="Download Selected Logs (ZIP)" 
+                        class="w-full p-3 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        @click="downloadLogs" 
+                    />
+                </div>
+                <!-- Enlace de descarga del ZIP -->
+                <div v-if="downloadUrl" class="mt-4">
+                    <a :href="downloadUrl" download="logs.zip" class="text-blue-500 underline">Click here to download the logs as ZIP</a>
                 </div>
             </div>
         </div>
     </div>
 </template>
+
+<style scoped>
+/* Asegurar que el input de fecha tenga el mismo tamaño que el InputText */
+.date-input {
+    height: calc(1.5em + 1rem + 2px); /* Altura del input ajustada para que coincida con InputText */
+    padding: 0.75rem; /* Relleno consistente con InputText */
+}
+
+/* Asegurar que todos los campos de entrada sean del mismo tamaño */
+input[type='date'],
+.p-inputtext {
+    width: 100%; /* Asegura que el input ocupe el 100% del ancho del contenedor */
+    border-radius: 0.375rem; /* Radio de borde consistente */
+    border: 1px solid #d1d5db; /* Borde consistente */
+}
+
+/* Margen adicional para radio buttons */
+.radio-margin {
+    margin-left: 1rem; /* Ajusta el margen según sea necesario */
+}
+</style>
+
+
+
 
 
 
