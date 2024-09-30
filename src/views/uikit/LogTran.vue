@@ -1,22 +1,25 @@
 <script>
-
-import axios from 'axios';
-import Button from 'primevue/button';
+import { ref, onMounted, watch } from 'vue';
 import Dropdown from 'primevue/dropdown';
-import InputText from 'primevue/inputtext';
 import RadioButton from 'primevue/radiobutton';
-import { onMounted, ref, watch } from 'vue';
-import Calendar from 'primevue/calendar'; // Importar Calendar
+import Button from 'primevue/button';
+import Calendar from 'primevue/calendar';
+import ProgressSpinner from 'primevue/progressspinner';
+import LogService from '@/services/LogService';
+import Dialog from 'primevue/dialog';
 import { regionService } from '@/services/RegionService';
 import { serverService } from '@/services/AgentService';
+import Checkbox from 'primevue/checkbox'; // Asegúrate de importar Checkbox
 
 export default {
     components: {
         Dropdown,
         RadioButton,
-        InputText,
         Button,
-        Calendar // Registrar Calendar
+        Calendar,
+        ProgressSpinner,
+        Dialog,
+        Checkbox // Registra el componente Checkbox
     },
     setup() {
         const regions = ref([]);
@@ -24,19 +27,40 @@ export default {
         const selectedRegion = ref(null);
         const filteredAgents = ref([]);
         const selectedAgent = ref(null);
-        const selectedDate = ref(''); // Fecha seleccionada
-        const logs = ref([]); // Logs que se mostrarán
-        const selectedLogs = ref([]); // Logs seleccionados para descargar
-        const downloadUrl = ref(''); // URL de descarga del archivo ZIP
+        const date = ref(null); // Esta es la fecha seleccionada
+        const logs = ref([]);
+        const selectedLogs = ref([]); // Cambia a un array para seleccionar múltiples logs
+        const errorMessage = ref('');
+        const isLoading = ref(false); // Variable para el estado de carga
 
-        const date = ref(null); // Para almacenar la fecha seleccionada
+        async function loadLogs() {
+            if (selectedAgent.value && date.value) {
+                try {
+                    const formattedDate = date.value.toISOString().split('T')[0].split('-').reverse().join('-'); // Formato DD-MM-YYYY
+                    const data = await LogService.filterLogsByDate(selectedAgent.value, formattedDate);
+                    if (Array.isArray(data)) {
+                        logs.value = data; // Guardar los nombres de archivo directamente
+                    } else {
+                        errorMessage.value = 'Error: Log data is not in the expected format.';
+                        logs.value = [];
+                    }
+                } catch (error) {
+                    if (error.message.includes('Network Error') || error.message.includes('I/O error')) {
+                        errorMessage.value = 'Unable to connect to the web service URL. Please check the URL and try again.';
+                    } else {
+                        errorMessage.value = 'Error fetching logs: ' + error.message;
+                    }
+                    logs.value = [];
+                }
+            }
+        }
 
         async function loadRegions() {
             try {
                 const response = await axios.get('/api/regions'); // Ajusta la URL según tu backend
                 regions.value = response.data.map((region) => ({ name: region.nameRegion, id: region.idRegion }));
             } catch (error) {
-                console.error('Error fetching regions:', error.message);
+                errorMessage.value = 'Error fetching regions: ' + error.message;
             }
         }
 
@@ -45,68 +69,44 @@ export default {
                 const response = await axios.get('/api/agents'); // Ajusta la URL según tu backend
                 agents.value = response.data.filter((agent) => agent.status === 1);
             } catch (error) {
-                console.error('Error fetching agents:', error.message);
+                errorMessage.value = 'Error fetching agents: ' + error.message;
             }
         }
 
         function filterAgentsByRegion() {
-            if (selectedRegion.value) {
-                filteredAgents.value = agents.value.filter((agent) => agent.regionId == selectedRegion.value);
+            filteredAgents.value = selectedRegion.value ? agents.value.filter((agent) => agent.regionId === selectedRegion.value) : [];
+        }
+
+        async function downloadSelectedLogs() {
+            if (selectedLogs.value.length > 0) { // Check if there are any selected logs
+                isLoading.value = true; // Open the loading modal
+                try {
+                    // Mapea los nombres de archivo para pasar al servicio
+                    const response = await LogService.zipLogFile(selectedAgent.value, selectedLogs.value);
+                    console.log('Log downloaded successfully');
+                } catch (error) {
+                    errorMessage.value = 'Error downloading log file: ' + error.message;
+                } finally {
+                    isLoading.value = false; // Close the loading modal
+                }
             } else {
-                filteredAgents.value = [];
+                errorMessage.value = 'Please select at least one log to download.';
             }
         }
 
-        async function fetchLogs() {
-            if (!selectedAgent.value || !selectedDate.value) {
-                console.error('Please select an agent and a date.');
-                return;
-            }
-
-            try {
-                const token = 'your-token-here'; // Obtén tu token JWT aquí
-                const response = await axios.get(`/logs/${selectedAgent.value}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
-                logs.value = response.data; // Asigna los logs obtenidos a la variable logs
-            } catch (error) {
-                console.error('Error fetching logs:', error.message);
-            }
-        }
-
-        async function downloadLogs() {
-            if (selectedLogs.value.length === 0) {
-                console.error('Please select at least one log.');
-                return;
-            }
-
-            try {
-                const token = 'your-token-here'; // Asegúrate de proporcionar el token correcto
-                const response = await axios.get(`/logs/download`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    },
-                    params: {
-                        logFileNames: selectedLogs.value
-                    },
-                    responseType: 'blob' // Indica que la respuesta será un archivo
-                });
-
-                // Crear un enlace de descarga
-                const url = window.URL.createObjectURL(new Blob([response.data]));
-                downloadUrl.value = url;
-            } catch (error) {
-                console.error('Error downloading logs:', error.message);
-            }
-        }
-
-        onMounted(async () => {
-            await loadRegions();
-            await loadAgents();
+        onMounted(() => {
+            loadRegions();
+            loadAgents();
         });
 
+        watch(selectedAgent, () =>{
+            loadLogs(); // Cargar logs al seleccionar una fecha
+            selectedLogs.value = []; // Limpiar la selección de logs
+        }); 
+        watch(date, () => {
+            loadLogs(); // Cargar logs al seleccionar una fecha
+            selectedLogs.value = []; // Limpiar la selección de logs
+        });
         watch(selectedRegion, filterAgentsByRegion);
 
         return {
@@ -115,13 +115,12 @@ export default {
             selectedRegion,
             filteredAgents,
             selectedAgent,
-            selectedDate,
+            date,
             logs,
             selectedLogs,
-            downloadUrl,
-            fetchLogs,
-            downloadLogs, // Asegúrate de que este nombre coincida con el nombre usado en el template
-            date // Añadir 'date' a la lista de variables reactivas
+            downloadSelectedLogs,
+            errorMessage,
+            isLoading
         };
     }
 };
@@ -132,7 +131,7 @@ export default {
         <div class="flex gap-6">
             <!-- Div para la primera mitad -->
             <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
-                <div class="mb-6">
+                <div class="mb-4">
                     <div class="font-semibold text-xl mb-4">Region Details</div>
                     <label for="region" class="block text-sm font-medium mb-2">Region</label>
                     <Dropdown 
@@ -148,19 +147,9 @@ export default {
                     />
                 </div>
 
-                <div class="mb-6">
-                    <label for="last-modified" class="block text-sm font-medium mb-2">Last Modified</label>
-                    <Calendar
-                        id="last-modified"
-                        v-model="date"
-                        class="w-full"
-                        placeholder="Select Date"
-                    />
-                </div>
-
-                <div class="mb-6">
+                <div class="mb-4">
                     <label class="block text-sm font-medium mb-3">Agents</label>
-                    <div class="flex flex-col gap-2">
+                    <div class="flex flex-col gap-2 ml-2">
                         <div v-for="agent in filteredAgents" :key="agent.idAgent" class="flex items-center">
                             <div class="flex items-center gap-2 radio-margin">
                                 <RadioButton v-model="selectedAgent" :value="agent.idAgent" name="agent" />
@@ -172,54 +161,99 @@ export default {
                         <div v-if="filteredAgents.length === 0" class="text-sm text-gray-500 mt-2">No agents found for the selected region</div>
                     </div>
                 </div>
+
+                <div class="mb-4">
+                    <label for="last-modified" class="block text-sm font-medium mb-2">Last Modified</label>
+                    <Calendar 
+                        id="last-modified" 
+                        v-model="date" 
+                        class="w-full" 
+                        placeholder="Select Date" 
+                    />
+                </div>
             </div>
 
             <!-- Div para la segunda mitad -->
             <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
-                <div class="font-semibold text-xl mb-4">Log Files</div>
-                <div>
-                    <Button 
-                        label="Fetch Logs" 
-                        class="w-full p-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                        @click="fetchLogs" 
-                    />
-                </div>
-                
-                <!-- Lista de logs -->
-                <div v-if="logs.length > 0" class="mt-4 overflow-y-auto" style="max-height: 300px;"> <!-- Ajusta la altura máxima según sea necesario -->
-                    <h3 class="text-lg font-semibold mb-2">Logs:</h3>
-                    <ul class="list-disc ml-5">
-                        <li v-for="log in logs" :key="log">
-                            <RadioButton type="check" :value="log" v-model="selectedLogs" />
-                            {{ log }}
-                        </li>
-                    </ul>
-                </div>
-                <div v-else class="text-sm text-gray-500 mt-2">No logs available.</div>
+                <div class="font-semibold text-xl">Log Files</div>
 
-                <!-- Botón de descarga de logs en formato ZIP -->
-                <div v-if="selectedLogs.length > 0" class="mt-4">
-                    <Button 
-                        label="Download Selected Logs (ZIP)" 
-                        class="w-full p-3 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
-                        @click="downloadLogs" 
-                    />
+                <div v-if="logs.length > 0">
+                    <table class="w-full table-auto border-collapse border border-gray-200">
+                        <thead>
+                            <tr class="text-white" style="background-color: #614d56">
+                                <th class="text-left p-2">Log File</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="log in logs" :key="log" class="border-b border-gray-200">
+                                <td class="p-2">
+                                    <div class="flex items-center">
+                                        <Checkbox v-model="selectedLogs" :value="log" name="log" />
+                                        <span class="ml-2">{{ log }}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="flex justify-end mt-4">
+                        <Button 
+                            icon="pi pi-download" 
+                            class="p-button-text" 
+                            @click="downloadSelectedLogs" 
+                            label="Download" 
+                        />
+                    </div>
                 </div>
-                <!-- Enlace de descarga del ZIP -->
-                <div v-if="downloadUrl" class="mt-4">
-                    <a :href="downloadUrl" download="logs.zip" class="text-blue-500 underline">Click here to download the logs as ZIP</a>
-                </div>
+                <div v-else class="text-sm text-gray-500">No logs available.</div>
             </div>
         </div>
+
+        <!-- Modal de carga -->
+        <Dialog 
+            v-model:visible="isLoading" 
+            modal 
+            :dismissableMask="false" 
+            :showHeader="false" 
+            :closable="false" 
+            style="width: 20%; height: 30%; display: flex; align-items: center; justify-content: center"
+        >
+            <div class="flex flex-col items-center justify-center">
+                <ProgressSpinner />
+                <p class="mt-4">Downloading logs...</p>
+            </div>
+        </Dialog>
+
+        <div v-if="errorMessage" class="text-red-500 mt-4">{{ errorMessage }}</div>
     </div>
 </template>
 
+
 <style scoped>
-/* Asegurar que todos los campos de entrada sean del mismo tamaño */
-.p-calendar {
-    width: 100%; /* Asegura que el calendario ocupe el 100% del ancho del contenedor */
-    border-radius: 0.375rem; /* Radio de borde consistente */
-    border: 1px solid #d1d5db; /* Borde consistente */
+/* Estilo para el encabezado de la tabla */
+.header-row {
+    background-color: #614d56;
+}
+
+/* Estilo general para la tabla */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* Estilo para los encabezados y celdas */
+th,
+td {
+    padding: 0.5rem;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    text-align: left;
+    color: white; /* Asegura que el texto del encabezado sea blanco */
+}
+
+td {
+    text-align: left;
 }
 
 /* Margen adicional para radio buttons */
@@ -227,15 +261,8 @@ export default {
     margin-left: 1rem; /* Ajusta el margen según sea necesario */
 }
 
-#create-button {
-  background: #64c4ac;
-  color: white;
-  border-color: #64c4ac;
-}
-
-#create-button:hover {
-  background: white;
-  color: #64c4ac;
-  border-color: #64c4ac;
+.p-calendar {
+    width: 100%; /* Asegura que el calendario ocupe el 100% del ancho del contenedor */
+    border-radius: 0.25rem; /* Ajusta el borde del calendario */
 }
 </style>

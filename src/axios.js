@@ -21,10 +21,11 @@ axios.interceptors.request.use(
 axios.interceptors.response.use(
   response => response,
   error => {
-    if (error.response && error.response.status === 401) {
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
       localStorage.removeItem('token');
       window.location.href = '/';
-    }
+  }
+  
 
     // Aquí se extrae el mensaje de error del backend
     const errorMessage = error.response?.data || 'An error occurred';
