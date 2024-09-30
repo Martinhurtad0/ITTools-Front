@@ -85,6 +85,24 @@ const routes = [
                 component: () => import('@/views/uikit/ArchiveLog.vue'),
                 meta: { requiresAuth: true }
             },
+            {
+                path: '/uikit/Jobs',
+                name: 'Jobs',
+                component: () => import('@/views/uikit/Jobs.vue'),
+                meta: { requiresAuth: true }
+            },
+            {
+                path: '/uikit/Propierties',
+                name: 'Propierties',
+                component: () => import('@/views/uikit/Propierties.vue'),
+                meta: { requiresAuth: true }
+            },
+            {
+                path: '/uikit/Running',
+                name: 'Running',
+                component: () => import('@/views/uikit/Running.vue'),
+                meta: { requiresAuth: true }
+            },
         ]
     },
 ];
