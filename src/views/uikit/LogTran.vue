@@ -57,8 +57,8 @@ export default {
 
         async function loadRegions() {
             try {
-                const response = await axios.get('/api/regions'); // Ajusta la URL según tu backend
-                regions.value = response.data.map((region) => ({ name: region.nameRegion, id: region.idRegion }));
+                const data = await regionService.getAllRegions();
+                regions.value = data.map((region) => ({ name: region.nameRegion, id: region.idRegion }));
             } catch (error) {
                 errorMessage.value = 'Error fetching regions: ' + error.message;
             }
@@ -66,8 +66,8 @@ export default {
 
         async function loadAgents() {
             try {
-                const response = await axios.get('/api/agents'); // Ajusta la URL según tu backend
-                agents.value = response.data.filter((agent) => agent.status === 1);
+                const data = await serverService.getAllServers();
+                agents.value = data.filter((agent) => agent.status === 1);
             } catch (error) {
                 errorMessage.value = 'Error fetching agents: ' + error.message;
             }
