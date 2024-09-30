@@ -1,85 +1,25 @@
-<template>
-    <div class="flex flex-col h-screen p-4">
-        <div class="flex gap-6">
-            <!-- Div para la primera mitad -->
-            <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
-                <div class="mb-6">
-                    <div class="font-semibold text-xl mb-4">Region Details</div>
-                    <label for="region" class="block text-sm font-medium mb-2">Region</label>
-                    <Dropdown id="region" v-model="selectedRegion" :options="regions" option-label="name" option-value="id" placeholder="Select Region" class="w-full" filter filterPlaceholder="Search Region" />
-                </div>
-
-                <div class="mb-6">
-                    <label for="last-modified" class="block text-sm font-medium mb-2">Last Modified</label>
-                    <Calendar id="last-modified" v-model="date" class="w-full" placeholder="Select Date" />
-                </div>
-
-                <div class="mb-6">
-                    <label class="block text-sm font-medium mb-3">Agents</label>
-                    <div class="flex flex-col gap-2">
-                        <div v-for="agent in filteredAgents" :key="agent.idAgent" class="flex items-center">
-                            <div class="flex items-center gap-2 radio-margin">
-                                <RadioButton v-model="selectedAgent" :value="agent.idAgent" name="agent" />
-                                <span class="text-sm">{{ agent.agentName }}</span>
-                                <span class="text-sm">||</span>
-                                <span class="text-sm">{{ agent.ipagent }}</span>
-                            </div>
-                        </div>
-                        <div v-if="filteredAgents.length === 0" class="text-sm text-gray-500 mt-2">No agents found for the selected region</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Div para la segunda mitad -->
-            <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
-                <div class="font-semibold text-xl mb-4">Log Files</div>
-
-                <div v-if="logs.length > 0">
-                    <table class="w-full table-auto border-collapse border border-gray-200">
-                        <thead>
-                            <tr class="text-white" style="background-color: #614d56">
-                                <th class="text-left p-2">Log File</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="log in logs" :key="log" class="border-b border-gray-200">
-                                <td class="p-2">
-                                    <div class="flex items-center">
-                                        <RadioButton v-model="selectedLog" :value="log" name="log" />
-                                        <span class="ml-2">{{ log }}</span>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div v-if="selectedLog" class="flex justify-end mt-4">
-                        <Button icon="pi pi-download" class="p-button-text" @click="downloadSelectedLogs" label="Download" />
-                    </div>
-                </div>
-                <div v-else class="text-sm text-gray-500">No logs available.</div>
-            </div>
-        </div>
-
-        <div v-if="errorMessage" class="text-red-500 mt-4">{{ errorMessage }}</div>
-    </div>
-</template>
-
 <script>
 import { ref, onMounted, watch } from 'vue';
 import Dropdown from 'primevue/dropdown';
 import RadioButton from 'primevue/radiobutton';
 import Button from 'primevue/button';
 import Calendar from 'primevue/calendar';
+import ProgressSpinner from 'primevue/progressspinner';
 import LogService from '@/services/LogService';
+import Dialog from 'primevue/dialog';
 import { regionService } from '@/services/RegionService';
 import { serverService } from '@/services/AgentService';
+import Checkbox from 'primevue/checkbox'; // Asegúrate de importar Checkbox
 
 export default {
     components: {
         Dropdown,
         RadioButton,
         Button,
-        Calendar
+        Calendar,
+        ProgressSpinner,
+        Dialog,
+        Checkbox // Registra el componente Checkbox
     },
     setup() {
         const regions = ref([]);
@@ -89,8 +29,9 @@ export default {
         const selectedAgent = ref(null);
         const date = ref(null); // Esta es la fecha seleccionada
         const logs = ref([]);
-        const selectedLog = ref(null);
+        const selectedLogs = ref([]); // Cambia a un array para seleccionar múltiples logs
         const errorMessage = ref('');
+        const isLoading = ref(false); // Variable para el estado de carga
 
         async function loadLogs() {
             if (selectedAgent.value && date.value) {
@@ -137,13 +78,19 @@ export default {
         }
 
         async function downloadSelectedLogs() {
-            if (selectedLog.value) {
+            if (selectedLogs.value.length > 0) { // Check if there are any selected logs
+                isLoading.value = true; // Open the loading modal
                 try {
-                    await LogService.zipLogFile(selectedAgent.value, selectedLog.value);
+                    // Mapea los nombres de archivo para pasar al servicio
+                    const response = await LogService.zipLogFile(selectedAgent.value, selectedLogs.value);
                     console.log('Log downloaded successfully');
                 } catch (error) {
                     errorMessage.value = 'Error downloading log file: ' + error.message;
+                } finally {
+                    isLoading.value = false; // Close the loading modal
                 }
+            } else {
+                errorMessage.value = 'Please select at least one log to download.';
             }
         }
 
@@ -152,8 +99,14 @@ export default {
             loadAgents();
         });
 
-        watch(selectedAgent, loadLogs); // Cargar logs al seleccionar un agente
-        watch(date, loadLogs); // Cargar logs al seleccionar una fecha
+        watch(selectedAgent, () =>{
+            loadLogs(); // Cargar logs al seleccionar una fecha
+            selectedLogs.value = []; // Limpiar la selección de logs
+        }); 
+        watch(date, () => {
+            loadLogs(); // Cargar logs al seleccionar una fecha
+            selectedLogs.value = []; // Limpiar la selección de logs
+        });
         watch(selectedRegion, filterAgentsByRegion);
 
         return {
@@ -162,15 +115,118 @@ export default {
             selectedRegion,
             filteredAgents,
             selectedAgent,
-            logs,
-            selectedLog,
             date,
+            logs,
+            selectedLogs,
+            downloadSelectedLogs,
             errorMessage,
-            downloadSelectedLogs
+            isLoading
         };
     }
 };
 </script>
+
+<template>
+    <div class="flex flex-col h-screen p-4">
+        <div class="flex gap-6">
+            <!-- Div para la primera mitad -->
+            <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
+                <div class="mb-4">
+                    <div class="font-semibold text-xl mb-4">Region Details</div>
+                    <label for="region" class="block text-sm font-medium mb-2">Region</label>
+                    <Dropdown 
+                        id="region" 
+                        v-model="selectedRegion" 
+                        :options="regions" 
+                        option-label="name" 
+                        option-value="id" 
+                        placeholder="Select Region" 
+                        class="w-full" 
+                        filter 
+                        filterPlaceholder="Search Region" 
+                    />
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-3">Agents</label>
+                    <div class="flex flex-col gap-2 ml-2">
+                        <div v-for="agent in filteredAgents" :key="agent.idAgent" class="flex items-center">
+                            <div class="flex items-center gap-2 radio-margin">
+                                <RadioButton v-model="selectedAgent" :value="agent.idAgent" name="agent" />
+                                <span class="text-sm">{{ agent.agentName }}</span>
+                                <span class="text-sm">||</span>
+                                <span class="text-sm">{{ agent.ipagent }}</span>
+                            </div>
+                        </div>
+                        <div v-if="filteredAgents.length === 0" class="text-sm text-gray-500 mt-2">No agents found for the selected region</div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="last-modified" class="block text-sm font-medium mb-2">Last Modified</label>
+                    <Calendar 
+                        id="last-modified" 
+                        v-model="date" 
+                        class="w-full" 
+                        placeholder="Select Date" 
+                    />
+                </div>
+            </div>
+
+            <!-- Div para la segunda mitad -->
+            <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
+                <div class="font-semibold text-xl">Log Files</div>
+
+                <div v-if="logs.length > 0">
+                    <table class="w-full table-auto border-collapse border border-gray-200">
+                        <thead>
+                            <tr class="text-white" style="background-color: #614d56">
+                                <th class="text-left p-2">Log File</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="log in logs" :key="log" class="border-b border-gray-200">
+                                <td class="p-2">
+                                    <div class="flex items-center">
+                                        <Checkbox v-model="selectedLogs" :value="log" name="log" />
+                                        <span class="ml-2">{{ log }}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="flex justify-end mt-4">
+                        <Button 
+                            icon="pi pi-download" 
+                            class="p-button-text" 
+                            @click="downloadSelectedLogs" 
+                            label="Download" 
+                        />
+                    </div>
+                </div>
+                <div v-else class="text-sm text-gray-500">No logs available.</div>
+            </div>
+        </div>
+
+        <!-- Modal de carga -->
+        <Dialog 
+            v-model:visible="isLoading" 
+            modal 
+            :dismissableMask="false" 
+            :showHeader="false" 
+            :closable="false" 
+            style="width: 20%; height: 30%; display: flex; align-items: center; justify-content: center"
+        >
+            <div class="flex flex-col items-center justify-center">
+                <ProgressSpinner />
+                <p class="mt-4">Downloading logs...</p>
+            </div>
+        </Dialog>
+
+        <div v-if="errorMessage" class="text-red-500 mt-4">{{ errorMessage }}</div>
+    </div>
+</template>
+
 
 <style scoped>
 /* Estilo para el encabezado de la tabla */
@@ -207,11 +263,6 @@ td {
 
 .p-calendar {
     width: 100%; /* Asegura que el calendario ocupe el 100% del ancho del contenedor */
-    border-radius: 0.375rem; /* Radio de borde consistente */
-    border: 1px solid #d1d5db; /* Borde consistente */
-}
-
-button {
-    cursor: pointer;
+    border-radius: 0.25rem; /* Ajusta el borde del calendario */
 }
 </style>
