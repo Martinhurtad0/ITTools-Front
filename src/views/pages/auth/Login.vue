@@ -1,14 +1,31 @@
 <script setup>
 import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { authService } from '@/services/AuthService';
 import { useRouter } from 'vue-router';
 import { GoogleLogin } from 'vue3-google-login';
-import logo from '@/assets/emida-logo-square.png'; // Importa la imagen
+import { useLayout } from '@/layout/composables/layout'; // Importa useLayout
+import logo from '@/assets/emida-logo-square.png'; // Logo para modo claro
+import logo2 from '@/assets/emida-logo-white.png'; // Logo para modo oscuro
 
 const email = ref('');
 const password = ref('');
 const router = useRouter();
+
+// Obtén isDarkTheme desde useLayout
+const { isDarkTheme } = useLayout(); // Asegúrate de que useLayout esté correctamente definido
+
+// Computed para determinar qué logo usar según el tema
+const currentLogo = computed(() => (isDarkTheme.value ? logo2 : logo));
+
+// Computed para determinar el tamaño del logo según el tema
+const logoSize = computed(() => (isDarkTheme.value ? '120px' : '140px')); // Ajusta los tamaños según tus preferencias
+
+// Computed para ajustar los márgenes según el tamaño del logo
+const logoMargins = computed(() => ({
+  marginTop: isDarkTheme.value ? '-1rem' : '-4rem', // Ajusta según sea necesario
+  marginBottom: isDarkTheme.value ? '2rem' : '-2rem' // Ajusta según sea necesario
+}));
 
 const handleLogin = async () => {
   try {
@@ -40,7 +57,6 @@ const callback = async (response) => {
 };
 </script>
 
-
 <template>
   <FloatingConfigurator />
   <div class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-[100vw] overflow-hidden">
@@ -51,13 +67,10 @@ const callback = async (response) => {
       >
         <div class="w-full bg-surface-0 dark:bg-surface-900 py-16 px-8 sm:px-20 rounded-[53px]">
           <div class="text-center flex flex-col items-center">
-          
-            
-            <!-- Imagen sin margen adicional -->
-            <img :src="logo" alt="Logo" width="130px" id="img"/>
-  <!-- Título -->
-  <div class="text-surface-900 dark:text-surface-0 text-3xl mb-8 font-medium">Welcome to ITTools</div>
-    
+            <!-- Imagen con logo dinámico y tamaño ajustado -->
+            <img :src="currentLogo" alt="Logo" :width="logoSize" class="logo-image" :style="logoMargins" />
+            <!-- Título -->
+            <div class="text-surface-900 dark:text-surface-0 text-3xl mb-8 font-medium">Welcome to ITTools</div>
           </div>
 
           <!-- Formulario de inicio de sesión -->
@@ -121,20 +134,14 @@ const callback = async (response) => {
 }
 
 #create-button {
-    background: #64c4ac;
-    color: white;
-    border-color: #64c4ac;
+  background: #64c4ac;
+  color: white;
+  border-color: #64c4ac;
 }
 
 #create-button:hover {
-    background: white;
-    color: #64c4ac;
-    border-color: #64c4ac;
+  background: white;
+  color: #64c4ac;
+  border-color: #64c4ac;
 }
-
-#img{
-  margin-top: -4rem;
-  margin-bottom: -2rem;
-}
-
 </style>

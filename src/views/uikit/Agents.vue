@@ -7,6 +7,7 @@ import DataTable from 'primevue/datatable';
 import Dialog from 'primevue/dialog';
 import Dropdown from 'primevue/dropdown';
 import InputText from 'primevue/inputtext';
+import Breadcrumb from 'primevue/breadcrumb';
 import { useToast } from 'primevue/usetoast';
 import { ref } from 'vue';
 
@@ -17,7 +18,8 @@ export default {
         Dropdown,
         DataTable,
         Column,
-        Dialog
+        Dialog,
+        Breadcrumb
     },
     setup() {
         const toast = useToast();
@@ -83,7 +85,26 @@ export default {
                 pathArchive: '',
                 regionId: null
             },
-            error: ''
+            error: '',
+
+              // Definición del breadcrumb
+              home: {
+                icon: 'pi pi-home',
+                label: 'Home',
+                route: { name: 'dashboard' }
+            },
+            items: [
+            {
+                label: 'Servers',
+                    icon: 'pi pi-fw pi-server',
+                    route: { name: 'Agents' }
+                },
+                {
+                    icon: 'pi pi-fw pi-cloud',
+                    label: 'Agents',
+                    route: { name: 'Agents' }
+                }
+            ]
         };
     },
     async created() {
@@ -263,12 +284,16 @@ export default {
 <template>
     <div class="flex flex-col h-screen p-4">
         <div class="flex-2 overflow-auto">
-            <div class="card p-4 flex flex-col gap-4 h-full">
-                <div class="font-semibold text-xl">Agents</div>
+            <div class="card p-6 flex flex-col gap-2 h-full">
+                <!-- Agrupar los dos elementos: titulo y breadcrumb -->
+                <div class="header-container">
+                    <div class="title font-semibold text-xl">Agents</div>
+                    <Breadcrumb :home="home" :model="items" />
+                </div>
                 <div class="flex justify-between items-center mb-2">
                     <!-- Agrupar los dos botones en un div con clase flex -->
                     <div class="flex gap-2">
-                        <Button label="Create User" icon="pi pi-plus" id="create-button" @click="openCreateServerDialog" />
+                        <Button label="Create Agent" icon="pi pi-plus" id="create-button" @click="openCreateServerDialog" />
                         <Button label="Filter All" icon="pi pi-filter" id="close-button"  @click="toggleFilter" />
                     </div>
                     <!-- Input de búsqueda al otro lado -->
@@ -495,5 +520,13 @@ export default {
   background: white;
   color: #64c4ac;
   border-color: #64c4ac;
+}
+
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: -1rem;
 }
 </style>

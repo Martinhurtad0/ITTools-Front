@@ -34,55 +34,56 @@ const LogService = {
     }
   },
 
- // Método en el servicio
- async zipLogFile(agentId, filenames) {
-  try {
-    const response = await axios.post(
-      `/logs/zip/${agentId}`, 
-      filenames,  // Send filenames directly
-      {
-        responseType: 'blob',  // Handle binary file response
+  // Método para zip de archivos log
+  async zipLogFile(agentId, filenames) {
+    try {
+      const response = await axios.post(
+        `/logs/zip/${agentId}`, 
+        filenames,  // Envía directamente los nombres de los archivos
+        {
+          responseType: 'blob',  // Maneja la respuesta de archivo binario
+        }
+      );
+
+      // Verifica si la respuesta es un archivo ZIP
+      const contentType = response.headers['content-type'];
+      if (contentType === 'application/zip' || contentType === 'application/octet-stream') {
+        // Crea un Blob a partir de la respuesta y descarga el archivo
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `logs.zip`); // Establece el nombre del archivo para descargar
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Libera el objeto URL después de la descarga
+        window.URL.revokeObjectURL(url);
+
+        return 'File downloaded successfully';
+      } else {
+        throw new Error(`Invalid file type received. Expected ZIP, got ${contentType}.`);
       }
-    );
-
-    // Check if the response is a ZIP file
-    const contentType = response.headers['content-type'];
-    if (contentType === 'application/zip' || contentType === 'application/octet-stream') {
-      // Create a Blob from the response and download the file
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `logs.zip`); // Set the file name for download
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      // Release the URL object after the download
-      window.URL.revokeObjectURL(url);
-
-      return 'File downloaded successfully';
-    } else {
-      throw new Error(`Invalid file type received. Expected ZIP, got ${contentType}.`);
+    } catch (error) {
+      console.error('Error downloading log file:', error.message);
+      throw error;
     }
-  } catch (error) {
-    console.error('Error downloading log file:', error.message);
-    throw error;
-  }
-},
+  },
 
+  // Obtener logs por ID de transacción
+  async getLogsByTransaction(agentId, transactionId, date) {
+    try {
+      const response = await axios.get(`/logs/transaction/${agentId}?transactionId=${transactionId}&date=${date}`);
+      return response.data; // Asegúrate de que esto sea lo que esperas
+    } catch (error) {
+      console.error('Error fetching transaction logs:', error.message);
+      throw error;
+    }
+  },
 
-async getLogsByTransaction(agentId, transactionId, date) {
-  try {
-    const response = await axios.get(`/logs/transaction/${agentId}?transactionId=${transactionId}&date=${date}`);
-    return response.data; // Asegúrate de que esto sea lo que esperas
-  } catch (error) {
-    console.error('Error fetching transaction logs:', error.message);
-    throw error;
-  }
-},
-
-async searchLogsInSelectedFiles(agentId, idTransaction, selectedFiles) {
-  try {
+  // Buscar logs en archivos seleccionados
+  async searchLogsInSelectedFiles(agentId, idTransaction, selectedFiles) {
+    try {
       // Validación de entrada
       if (!idTransaction || !selectedFiles || selectedFiles.length === 0) {
           throw new Error('idTransaction and selectedFiles are required.');
@@ -99,12 +100,12 @@ async searchLogsInSelectedFiles(agentId, idTransaction, selectedFiles) {
 
       // Retornar la respuesta del servidor
       return response.data;
-  } catch (error) {
+    } catch (error) {
       console.error('Error searching logs in selected files:', error.message);
+      // Aquí puedes manejar el error de una manera más específica si es necesario
       throw error;
+    }
   }
-}
-
-
 };
+
 export default LogService;
