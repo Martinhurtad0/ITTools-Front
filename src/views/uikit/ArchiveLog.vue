@@ -42,7 +42,7 @@ export default {
             if (selectedAgent.value && date.value) {
                 try {
                     const formattedDate = date.value.toISOString().split('T')[0].split('-').reverse().join('-'); // Formato DD-MM-YYYY
-                    const data = await LogService.filterLogsByDate(selectedAgent.value, formattedDate);
+                    const data = await LogService.filterLogsArchiveByDate(selectedAgent.value, formattedDate);
                     if (Array.isArray(data)) {
                         logs.value = data; // Guardar los nombres de archivo directamente
                     } else {

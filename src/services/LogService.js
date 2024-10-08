@@ -34,6 +34,17 @@ const LogService = {
     }
   },
 
+    // Filtrar logs_archive por fecha para un agente específico
+    async filterLogsArchiveByDate(agentId, date) {
+      try {
+        const response = await axios.get(`/logs/filter_archive/${agentId}?date=${date}`);
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching logs by date:', error.message);
+        throw error;
+      }
+    },
+
   // Método para zip de archivos log
   async zipLogFile(agentId, filenames) {
     try {
