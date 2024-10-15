@@ -266,8 +266,8 @@ export default {
                 <div class="flex justify-between items-center mb-2">
                     <!-- Agrupar los dos botones en un div con clase flex -->
                     <div class="flex gap-2">
-                        <Button label="Create User" icon="pi pi-plus" id="create-button" @click="openCreateUserDialog" />
-                        <Button label="Filter All" icon="pi pi-filter" id="close-button" @click="toggleFilter" />
+                        <Button label="Create user" icon="pi pi-plus" id="create-button" @click="openCreateUserDialog" />
+                        <Button label="Filter all" icon="pi pi-filter" id="close-button" @click="toggleFilter" />
                     </div>
                     <!-- Input de búsqueda al otro lado -->
                     <InputText v-model="searchQuery" placeholder="Global search..." class="p-inputtext p-component" />
@@ -275,7 +275,7 @@ export default {
 
                 <div class="overflow-x-auto">
                     <DataTable :value="filteredUsers" class="p-datatable-sm" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="users.length" sortMode="multiple">
-                        <Column field="full_name" header="Full Name" sortable />
+                        <Column field="full_name" header="Full name" sortable />
                         <Column field="area" header="Area" sortable />
                         <Column field="roles" header="Roles" sortable>
                             <template #body="{ data }">
@@ -305,7 +305,7 @@ export default {
         </div>
 
         <!-- Diálogo de creación de usuario -->
-        <Dialog v-model:visible="isCreateUserDialogVisible" header="Create User" modal :style="{ 'max-width': '30vw', width: '30vw' }">
+        <Dialog v-model:visible="isCreateUserDialogVisible" header="Create user" modal :style="{ 'max-width': '30vw', width: '30vw' }">
             <form @submit.prevent="registerUser">
                 <div class="flex gap-4">
                     <!-- Sección de Inputs -->
@@ -313,23 +313,23 @@ export default {
                         <div class="flex flex-wrap gap-4">
                             <div class="flex flex-col grow basis-0 gap-2">
                                 <label for="emailCreate">Email</label>
-                                <InputText id="emailCreate" type="email" v-model="editUserData.email" class="p-inputtext-sm input-with-line" placeholder="Enter Email" required />
+                                <InputText id="emailCreate" type="email" v-model="editUserData.email" class="p-inputtext-sm input-with-line" placeholder="Enter email" required />
                             </div>
                             <div class="flex flex-col grow basis-0 gap-2">
                                 <label for="passwordCreate">Password</label>
-                                <InputText id="passwordCreate" type="password" v-model="editUserData.password" class="p-inputtext-sm input-with-line" placeholder="Enter Password" required />
+                                <InputText id="passwordCreate" type="password" v-model="editUserData.password" class="p-inputtext-sm input-with-line" placeholder="Enter password" required />
                             </div>
                             <div class="flex flex-col grow basis-0 gap-2">
-                                <label for="full_nameCreate">Full Name</label>
-                                <InputText id="full_nameCreate" type="text" v-model="editUserData.full_name" class="p-inputtext-sm input-with-line" placeholder="Enter Full Name" required />
+                                <label for="full_nameCreate">Full name</label>
+                                <InputText id="full_nameCreate" type="text" v-model="editUserData.full_name" class="p-inputtext-sm input-with-line" placeholder="Enter full name" required />
                             </div>
                             <div class="flex flex-col grow basis-0 gap-2">
                                 <label for="chargeCreate">Charge</label>
-                                <InputText id="chargeCreate" type="text" v-model="editUserData.charge" class="p-inputtext-sm input-with-line" placeholder="Enter Charge" required />
+                                <InputText id="chargeCreate" type="text" v-model="editUserData.charge" class="p-inputtext-sm input-with-line" placeholder="Enter charge" required />
                             </div>
                             <div class="flex flex-col grow basis-0 gap-2">
                                 <label for="areaCreate">Area</label>
-                                <InputText id="areaCreate" type="text" v-model="editUserData.area" class="p-inputtext-sm input-with-line" placeholder="Enter Area" required />
+                                <InputText id="areaCreate" type="text" v-model="editUserData.area" class="p-inputtext-sm input-with-line" placeholder="Enter area" required />
                             </div>
                         </div>
                     </div>
@@ -353,7 +353,7 @@ export default {
         </Dialog>
 
         <!-- Diálogo de edición de usuario-->
-        <Dialog v-model:visible="isEditDialogVisible" header="Edit User" modal :style="{ 'max-width': '30vw', width: '30vw' }">
+        <Dialog v-model:visible="isEditDialogVisible" header="Edit user" modal :style="{ 'max-width': '30vw', width: '30vw' }">
             <form @submit.prevent="updateUser">
                 <div class="flex gap-4">
                     <!-- Sección de Inputs -->
@@ -361,23 +361,23 @@ export default {
                         <div class="flex flex-wrap gap-4">
                             <div class="flex flex-col grow basis-0 gap-2">
                                 <label for="emailEdit">Email</label>
-                                <InputText id="emailEdit" type="email" v-model="editUserData.email" class="p-inputtext-sm input-with-line" placeholder="Enter Email" required />
+                                <InputText id="emailEdit" type="email" v-model="editUserData.email" class="p-inputtext-sm input-with-line" placeholder="Enter email" required />
                             </div>
                             <div class="flex flex-col grow basis-0 gap-2">
                                 <label for="passwordEdit">Password</label>
-                                <InputText id="passwordEdit" type="password" v-model="editUserData.password" class="p-inputtext-sm input-with-line" placeholder="Enter Password" required />
+                                <InputText id="passwordEdit" type="password" v-model="editUserData.password" class="p-inputtext-sm input-with-line" placeholder="Enter password" required />
                             </div>
                             <div class="flex flex-col grow basis-0 gap-2">
-                                <label for="full_nameEdit">Full Name</label>
-                                <InputText id="full_nameEdit" type="text" v-model="editUserData.full_name" class="p-inputtext-sm input-with-line" placeholder="Enter Full Name" required />
+                                <label for="full_nameEdit">Full name</label>
+                                <InputText id="full_nameEdit" type="text" v-model="editUserData.full_name" class="p-inputtext-sm input-with-line" placeholder="Enter full name" required />
                             </div>
                             <div class="flex flex-col grow basis-0 gap-2">
                                 <label for="chargeEdit">Charge</label>
-                                <InputText id="chargeEdit" type="text" v-model="editUserData.charge" class="p-inputtext-sm input-with-line" placeholder="Enter Charge" required />
+                                <InputText id="chargeEdit" type="text" v-model="editUserData.charge" class="p-inputtext-sm input-with-line" placeholder="Enter charge" required />
                             </div>
                             <div class="flex flex-col grow basis-0 gap-2">
                                 <label for="areaEdit">Area</label>
-                                <InputText id="areaEdit" type="text" v-model="editUserData.area" class="p-inputtext-sm input-with-line" placeholder="Enter Area" required />
+                                <InputText id="areaEdit" type="text" v-model="editUserData.area" class="p-inputtext-sm input-with-line" placeholder="Enter area" required />
                             </div>
                         </div>
                     </div>
@@ -400,10 +400,10 @@ export default {
         </Dialog>
     </div>
     <!-- Diálogo de detalle de usuario -->
-    <Dialog v-model:visible="isShowDialogVisible" header="User Details" modal :style="{ 'max-width': '25vw', width: '25vw' }">
+    <Dialog v-model:visible="isShowDialogVisible" header="User details" modal :style="{ 'max-width': '25vw', width: '25vw' }">
         <div class="flex flex-col gap-4">
             <div><strong>Email:</strong> {{ detailUserData.email }}</div>
-            <div><strong>Full Name:</strong> {{ detailUserData.full_name }}</div>
+            <div><strong>Full name:</strong> {{ detailUserData.full_name }}</div>
             <div><strong>Charge:</strong> {{ detailUserData.charge }}</div>
             <div><strong>Area:</strong> {{ detailUserData.area }}</div>
             <div><strong>Roles:</strong> {{ detailUserData.roles.join(', ') }}</div>
@@ -414,7 +414,7 @@ export default {
     </Dialog>
 
     <!-- Diálogo de confirmación borrar -->
-    <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
+    <Dialog v-model:visible="displayDeleteConfirmation" header="Delete confirmation" modal class="max-w-sm">
         <p>Are you sure you want to delete this user?</p>
         <template #footer>
             <div class="flex justify-end gap-2">

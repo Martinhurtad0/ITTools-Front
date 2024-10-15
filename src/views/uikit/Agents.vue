@@ -299,8 +299,8 @@ export default {
                 <div class="flex justify-between items-center mb-2">
                     <!-- Agrupar los dos botones en un div con clase flex -->
                     <div class="flex gap-2">
-                        <Button label="Create Agent" icon="pi pi-plus" id="create-button" @click="openCreateServerDialog" />
-                        <Button label="Filter All" icon="pi pi-filter" id="close-button"  @click="toggleFilter" />
+                        <Button label="Create agent" icon="pi pi-plus" id="create-button" @click="openCreateServerDialog" />
+                        <Button label="Filter all" icon="pi pi-filter" id="close-button"  @click="toggleFilter" />
                     </div>
                     <!-- Input de búsqueda al otro lado -->
                     <InputText v-model="searchQuery" placeholder="Global search..." class="p-inputtext p-component" />
@@ -343,36 +343,36 @@ export default {
         </div>
 
         <!-- Diálogo de creación de servidor -->
-        <Dialog header="Create Agent" v-model:visible="isCreateServerDialogVisible" modal :style="{ 'max-width': '30vw', width: '30vw' }">
+        <Dialog header="Create agent" v-model:visible="isCreateServerDialogVisible" modal :style="{ 'max-width': '30vw', width: '30vw' }">
             <form @submit.prevent="createServer">
                 <div class="flex gap-4">
                     <!-- Inputs columna izquierda -->
                     <div class="flex flex-col w-1/2 gap-4">
                         <div class="flex flex-col gap-2">
-                            <label for="create_serverName">Server Name</label>
-                            <InputText id="create_serverName" v-model="newServer.agentName" class="p-inputtext-sm input-with-line" placeholder="Enter Server Name" />
+                            <label for="create_serverName">Server name</label>
+                            <InputText id="create_serverName" v-model="newServer.agentName" class="p-inputtext-sm input-with-line" placeholder="Enter server name" />
                         </div>
                         <div class="flex flex-col gap-2">
-                            <label for="create_ipagent">IP Address</label>
-                            <InputText id="create_ipagent" v-model="newServer.ipagent" class="p-inputtext-sm input-with-line" placeholder="Enter IP Address" />
+                            <label for="create_ipagent">IP address</label>
+                            <InputText id="create_ipagent" v-model="newServer.ipagent" class="p-inputtext-sm input-with-line" placeholder="Enter ip address" />
                         </div>
                         <div class="flex flex-col gap-2">
-                            <label for="create_webServiceUrl">Web Service URL</label>
-                            <InputText id="create_webServiceUrl" v-model="newServer.webServiceUrl" class="p-inputtext-sm input-with-line" placeholder="Enter Web Service URL" />
+                            <label for="create_webServiceUrl">Web service url</label>
+                            <InputText id="create_webServiceUrl" v-model="newServer.webServiceUrl" class="p-inputtext-sm input-with-line" placeholder="Enter web service url" />
                         </div>
                     </div>
                     <!-- Inputs columna derecha -->
                     <div class="flex flex-col w-1/2 gap-4">
                         <div class="flex flex-col gap-2">
-                            <label for="create_pathArchive">Path Log</label>
-                            <InputText id="create_pathArchive" v-model="newServer.pathLog" class="p-inputtext-sm input-with-line" placeholder="Enter Path Log" />
+                            <label for="create_pathArchive">Path log</label>
+                            <InputText id="create_pathArchive" v-model="newServer.pathLog" class="p-inputtext-sm input-with-line" placeholder="Enter path log" />
                         </div>
                         <div class="flex flex-col gap-2">
-                            <label for="create_pathArchive">Path Archive Log</label>
-                            <InputText id="create_pathArchive" v-model="newServer.pathArchive" class="p-inputtext-sm input-with-line" placeholder="Enter Path Archive Log" />
+                            <label for="create_pathArchive">Path archive log</label>
+                            <InputText id="create_pathArchive" v-model="newServer.pathArchive" class="p-inputtext-sm input-with-line" placeholder="Enter path archive log" />
                         </div>
                         <div class="flex flex-col gap-2">
-                            <label for="create_regionId">Select Region</label>
+                            <label for="create_regionId">Region</label>
                             <Dropdown id="create_regionId" v-model="newServer.regionId" :options="regions" optionLabel="nameRegion" optionValue="idRegion" filter filterPlaceholder="Search..." class="custom-dropdown p-dropdown-sm" />
                         </div>
                     </div>
@@ -386,38 +386,38 @@ export default {
 
         <!-- Modal de edición de servidor -->
 
-        <Dialog header="Edit Agent" v-model:visible="isEditDialogVisible" modal :style="{ 'max-width': '30vw', width: '30vw' }">
+        <Dialog header="Edit agent" v-model:visible="isEditDialogVisible" modal :style="{ 'max-width': '30vw', width: '30vw' }">
             <form @submit.prevent="updateServer">
                 <div class="flex gap-4">
                     <!-- Sección de Inputs (columna izquierda) -->
                     <div class="flex flex-col w-1/2 gap-4">
                         <div class="flex flex-col gap-2">
-                            <label for="edit_serverName">Server Name</label>
-                            <InputText id="edit_serverName" type="text" v-model="editServerData.agentName" class="p-inputtext-sm input-with-line" placeholder="Enter Server Name" />
+                            <label for="edit_serverName">Server name</label>
+                            <InputText id="edit_serverName" type="text" v-model="editServerData.agentName" class="p-inputtext-sm input-with-line" placeholder="Enter server name" />
                         </div>
                         <div class="flex flex-col gap-2">
-                            <label for="edit_ipagent">IP Address</label>
-                            <InputText id="edit_ipagent" type="text" v-model="editServerData.ipagent" class="p-inputtext-sm input-with-line" placeholder="Enter IP Address" />
+                            <label for="edit_ipagent">IP address</label>
+                            <InputText id="edit_ipagent" type="text" v-model="editServerData.ipagent" class="p-inputtext-sm input-with-line" placeholder="Enter ip address" />
                         </div>
                         <div class="flex flex-col gap-2">
-                            <label for="edit_webServiceUrl">Web Service URL</label>
-                            <InputText id="edit_webServiceUrl" type="text" v-model="editServerData.webServiceUrl" class="p-inputtext-sm input-with-line" placeholder="Enter Web Service URL" />
+                            <label for="edit_webServiceUrl">Web service url</label>
+                            <InputText id="edit_webServiceUrl" type="text" v-model="editServerData.webServiceUrl" class="p-inputtext-sm input-with-line" placeholder="Enter web service url" />
                         </div>
                     </div>
 
                     <!-- Sección de Inputs (columna derecha) -->
                     <div class="flex flex-col w-1/2 gap-4">
                         <div class="flex flex-col gap-2">
-                            <label for="edit_pathArchive">Path Log</label>
-                            <InputText id="edit_pathArchive" type="text" v-model="editServerData.pathLog" class="p-inputtext-sm input-with-line" placeholder="Enter Path Log" />
+                            <label for="edit_pathArchive">Path log</label>
+                            <InputText id="edit_pathArchive" type="text" v-model="editServerData.pathLog" class="p-inputtext-sm input-with-line" placeholder="Enter path log" />
                         </div>
                         <div class="flex flex-col gap-2">
-                            <label for="edit_pathArchive">Path Archive Log</label>
-                            <InputText id="edit_pathArchive" type="text" v-model="editServerData.pathArchive" class="p-inputtext-sm input-with-line" placeholder="Enter Path Archive Log" />
+                            <label for="edit_pathArchive">Path archive log</label>
+                            <InputText id="edit_pathArchive" type="text" v-model="editServerData.pathArchive" class="p-inputtext-sm input-with-line" placeholder="Enter path archive log" />
                         </div>
                         
                         <div class="flex flex-col gap-2">
-                            <label for="edit_regionId">Select Region</label>
+                            <label for="edit_regionId">Region</label>
                             <Dropdown id="edit_regionId" v-model="editServerData.regionId" :options="regions" optionLabel="nameRegion" optionValue="idRegion" filter filterPlaceholder="Search..." class="custom-dropdown p-dropdown-sm" />
                         </div>
                     </div>
@@ -432,13 +432,13 @@ export default {
         </Dialog>
 
         <!-- Diálogo de detalle de agent -->
-        <Dialog v-model:visible="isShowDialogVisible" header="Agent Details" modal :style="{ 'max-width': '30vw', width: '30vw' }">
+        <Dialog v-model:visible="isShowDialogVisible" header="Agent details" modal :style="{ 'max-width': '30vw', width: '30vw' }">
             <div class="flex flex-col gap-4">
-                <div><strong>Servername:</strong> {{ detailServerData.agentName }}</div>
-                <div><strong>IP Address:</strong> {{ detailServerData.ipagent }}</div>
-                <div><strong>Web Service URL:</strong> {{ detailServerData.webServiceUrl }}</div>
-                <div><strong>Path Log:</strong> {{ detailServerData.pathLog }}</div>
-                <div><strong>Archive Path Log:</strong> {{ detailServerData.pathArchive }}</div>
+                <div><strong>Server name:</strong> {{ detailServerData.agentName }}</div>
+                <div><strong>IP address:</strong> {{ detailServerData.ipagent }}</div>
+                <div><strong>Web service url:</strong> {{ detailServerData.webServiceUrl }}</div>
+                <div><strong>Path log:</strong> {{ detailServerData.pathLog }}</div>
+                <div><strong>Archive path log:</strong> {{ detailServerData.pathArchive }}</div>
                 <div><strong>Region:</strong> {{ getRegionNameById(detailServerData.regionId) }}</div>
                 <div>
                     <strong>Status:</strong>
@@ -450,7 +450,7 @@ export default {
         </Dialog>
 
         <!-- Diálogo de confirmación borrar -->
-        <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
+        <Dialog v-model:visible="displayDeleteConfirmation" header="Delete confirmation" modal class="max-w-sm">
             <p>Are you sure you want to delete this agent?</p>
             <template #footer>
                 <div class="flex justify-end gap-2">

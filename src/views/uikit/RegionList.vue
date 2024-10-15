@@ -242,8 +242,8 @@ export default {
                 </div>
                 <div class="flex justify-between items-center mb-2">
                     <div class="flex gap-2">
-                        <Button label="Create Region" icon="pi pi-plus" id="create-button" @click="openCreateRegionDialog" />
-                        <Button label="Filter All" icon="pi pi-filter" id="close-button" @click="toggleFilter"  />
+                        <Button label="Create region" icon="pi pi-plus" id="create-button" @click="openCreateRegionDialog" />
+                        <Button label="Filter all" icon="pi pi-filter" id="close-button" @click="toggleFilter"  />
                     </div>
                     <InputText v-model="searchQuery" placeholder="Global search..." class="p-inputtext p-component" />
                 </div>
@@ -275,7 +275,7 @@ export default {
         </div>
 
         <!-- Diálogo de creación de región -->
-        <Dialog v-model:visible="isRegionDialogVisible" modal header="Create Region">
+        <Dialog v-model:visible="isRegionDialogVisible" modal header="Create region">
             <form @submit.prevent="registerRegion">
                 <div class="flex gap-4">
                     <div class="flex flex-wrap gap-4">
@@ -298,7 +298,7 @@ export default {
         </Dialog>
 
         <!-- Diálogo de edición de región -->
-        <Dialog v-model:visible="isEditDialogVisible" modal header="Edit Region">
+        <Dialog v-model:visible="isEditDialogVisible" modal header="Edit region">
             <form @submit.prevent="updateRegion">
                 <div class="flex gap-4">
                     <div class="flex flex-wrap gap-4">
@@ -320,7 +320,7 @@ export default {
             </form>
         </Dialog>
         <!-- Diálogo de confirmación eliminar -->
-        <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
+        <Dialog v-model:visible="displayDeleteConfirmation" header="Delete confirmation" modal class="max-w-sm">
             <p>Are you sure you want to delete this region?</p>
             <template #footer>
                 <div class="flex justify-end gap-2">

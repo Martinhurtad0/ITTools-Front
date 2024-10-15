@@ -29,9 +29,15 @@ export default {
             endDate: null, // Fecha de fin para el filtro
             selectedMethod: '', // Método seleccionado para el filtro
             methods: [
+                { label: 'All', value: '' },
                 { label: 'Create', value: 'Create' },
                 { label: 'Update', value: 'Update' },
-                { label: 'Delete', value: 'Delete' }
+                { label: 'Delete', value: 'Delete' },
+                { label: 'Download', value: 'Download' },
+                { label: 'Get logs', value: 'Get logs in' },
+                { label: 'Get archive logs', value: 'Get archive logs' },
+                { label: 'Transaction search', value: 'Transaction search' }
+
             ],
             home: {
                 icon: 'pi pi-home',
@@ -131,7 +137,7 @@ export default {
                             {{ formatDateTime(slotProps.data.dateTime) }}
                         </template>
                     </Column>
-                    <Column field="userIP" header="User ip" sortable />
+                    <Column field="userIP" header="User IP" sortable />
                 </DataTable>
             </div>
         </div>

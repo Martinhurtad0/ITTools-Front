@@ -23,7 +23,7 @@ const logoSize = computed(() => (isDarkTheme.value ? '120px' : '140px')); // Aju
 
 // Computed para ajustar los márgenes según el tamaño del logo
 const logoMargins = computed(() => ({
-  marginTop: isDarkTheme.value ? '-1rem' : '-4rem', // Ajusta según sea necesario
+  marginTop: isDarkTheme.value ? '-1rem' : '-5rem', // Ajusta según sea necesario
   marginBottom: isDarkTheme.value ? '2rem' : '-2rem' // Ajusta según sea necesario
 }));
 

@@ -41,7 +41,7 @@ const model = ref([
         label: 'Servers',
         icon: 'pi pi-fw pi-server',
         items: [
-            { label: 'ServersDB', icon: 'pi pi-fw pi-database', to: '/uikit/ServersDB' },
+            { label: 'Servers DB', icon: 'pi pi-fw pi-database', to: '/uikit/ServersDB' },
             { label: 'Agents', icon: 'pi pi-fw pi-cloud', to: '/uikit/Agents' }
         ]
     },
@@ -49,9 +49,9 @@ const model = ref([
         label: 'Logs',
         icon: 'pi pi-fw pi-folder', // Icono actualizado para Logs
         items: [
-            { label: 'Multi find logs', icon: 'pi pi-fw pi-search', to: '/uikit/FindLogTran' },
-            { label: 'Log transfer', icon: 'pi pi-fw pi-share-alt', to: '/uikit/LogTran' },
             { label: 'Find in a log file', icon: 'pi pi-fw pi-search-plus', to: '/uikit/FindLog' },
+            { label: 'Multi find logs', icon: 'pi pi-fw pi-search', to: '/uikit/FindLogTran' },
+            { label: 'Logs transfer', icon: 'pi pi-fw pi-share-alt', to: '/uikit/LogTran' },
             { label: 'Archive logs', icon: 'pi pi-fw pi-clock', to: '/uikit/ArchiveLog' }
         ]
     },

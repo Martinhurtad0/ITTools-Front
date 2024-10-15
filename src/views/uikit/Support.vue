@@ -73,16 +73,16 @@ export default {
                 <!-- Columna derecha con el formulario de contacto -->
                 <div class="w-2/3 p-4">
                     <div class="form-container">
-                        <h2 class="text-2xl font-semibold mb-4">Contact Us</h2>
+                        <h2 class="text-2xl font-semibold mb-4">Contact us</h2>
                         <form @submit.prevent="submitForm">
                             <!-- Fila con First Name y Last Name -->
                             <div class="flex mb-4">
                                 <div class="w-1/2 mr-4">
-                                    <label for="firstName" class="block text-sm font-medium">First Name</label>
+                                    <label for="firstName" class="block text-sm font-medium">First name</label>
                                     <InputText type="text" id="firstName" v-model="firstName" class="input-field input-with-line" placeholder="Enter your first name" required />
                                 </div>
                                 <div class="w-1/2">
-                                    <label for="lastName" class="block text-sm font-medium">Last Name</label>
+                                    <label for="lastName" class="block text-sm font-medium">Last name</label>
                                     <InputText type="text" id="lastName" v-model="lastName" class="input-field input-with-line" placeholder="Enter your last name" required />
                                 </div>
                             </div>
@@ -105,8 +105,11 @@ export default {
                                 <Textarea id="message" v-model="message" rows="1" class="input-field input-with-line " placeholder="Enter your message" required></textarea>
                             </div>
 
+                            <div class="flex justify-end mt-4">
+                                <Button type="submit" id="create-button" class="submit-btn">Submit</Button>
+                            </div>
                             <!-- Botón de envío -->
-                            <Button type="submit" id="create-button" class="submit-btn">Submit</Button>
+                           
                         </form>
                     </div>
                 </div>

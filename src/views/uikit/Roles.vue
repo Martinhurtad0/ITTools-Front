@@ -220,8 +220,8 @@ export default {
 
                 <div class="flex justify-between items-center mb-2">
                     <div class="flex gap-2">
-                        <Button label="Create Role" icon="pi pi-plus" id="create-button" @click="openCreateRoleDialog" />
-                        <Button label="Filter All" icon="pi pi-filter" id="close-button" @click="toggleFilter" />
+                        <Button label="Create role" icon="pi pi-plus" id="create-button" @click="openCreateRoleDialog" />
+                        <Button label="Filter all" icon="pi pi-filter" id="close-button" @click="toggleFilter" />
                     </div>
                     <InputText v-model="searchQuery" placeholder="Global search..." class="p-inputtext p-component" />
                 </div>
@@ -252,17 +252,17 @@ export default {
         </div>
 
         <!-- Diálogos para creación, edición y confirmación de borrado -->
-        <Dialog v-model:visible="isCreateRoleDialogVisible" modal header="Create Role">
+        <Dialog v-model:visible="isCreateRoleDialogVisible" modal header="Create role">
             <form @submit.prevent="registerRole">
                 <div class="flex gap-4">
                     <div class="flex flex-wrap gap-4">
                         <div class="flex flex-col grow basis-0 gap-2">
                             <label for="nameCreate">Name</label>
-                            <InputText id="nameCreate" type="text" v-model="role.authority" class="p-inputtext-sm input-with-line" placeholder="Enter Role Name" required />
+                            <InputText id="nameCreate" type="text" v-model="role.authority" class="p-inputtext-sm input-with-line" placeholder="Enter role name" required />
                         </div>
                         <div class="flex flex-col grow basis-0 gap-2">
                             <label for="descriptionCreate">Description</label>
-                            <InputText id="descriptionCreate" type="text" v-model="role.description" class="p-inputtext-sm input-with-line" placeholder="Enter Role Description" required />
+                            <InputText id="descriptionCreate" type="text" v-model="role.description" class="p-inputtext-sm input-with-line" placeholder="Enter role description" required />
                         </div>
                     </div>
                 </div>
@@ -273,17 +273,17 @@ export default {
             </form>
         </Dialog>
 
-        <Dialog v-model:visible="isEditDialogVisible" modal header="Edit Role">
+        <Dialog v-model:visible="isEditDialogVisible" modal header="Edit role">
             <form @submit.prevent="updateRole">
                 <div class="flex gap-4">
                     <div class="flex flex-wrap gap-4">
                         <div class="flex flex-col grow basis-0 gap-2">
                             <label for="nameEdit">Name</label>
-                            <InputText id="nameEdit" type="text" v-model="editRoleData.authority" class="p-inputtext-sm input-with-line" placeholder="Enter Role Name" required />
+                            <InputText id="nameEdit" type="text" v-model="editRoleData.authority" class="p-inputtext-sm input-with-line" placeholder="Enter role name" required />
                         </div>
                         <div class="flex flex-col grow basis-0 gap-2">
                             <label for="descriptionEdit">Description</label>
-                            <InputText id="descriptionEdit" type="text" v-model="editRoleData.description" class="p-inputtext-sm input-with-line" placeholder="Enter Role Description" required />
+                            <InputText id="descriptionEdit" type="text" v-model="editRoleData.description" class="p-inputtext-sm input-with-line" placeholder="Enter role description" required />
                         </div>
                     </div>
                 </div>
@@ -294,7 +294,7 @@ export default {
             </form>
         </Dialog>
 
-        <Dialog v-model:visible="displayDeleteConfirmation" header="Delete Confirmation" modal class="max-w-sm">
+        <Dialog v-model:visible="displayDeleteConfirmation" header="Delete confirmation" modal class="max-w-sm">
             <p>Are you sure you want to delete this role?</p>
             <template #footer>
                 <div class="flex justify-end gap-2">
