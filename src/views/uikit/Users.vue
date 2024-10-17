@@ -274,7 +274,8 @@ export default {
                 </div>
 
                 <div class="overflow-x-auto">
-                    <DataTable :value="filteredUsers" class="p-datatable-sm" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="users.length" sortMode="multiple">
+                    <DataTable :value="filteredUsers" class="p-datatable-sm" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="users.length" sortMode="multiple"
+                    :sortOrder="-1">
                         <Column field="full_name" header="Full name" sortable />
                         <Column field="area" header="Area" sortable />
                         <Column field="roles" header="Roles" sortable>
@@ -400,7 +401,7 @@ export default {
         </Dialog>
     </div>
     <!-- Diálogo de detalle de usuario -->
-    <Dialog v-model:visible="isShowDialogVisible" header="User details" modal :style="{ 'max-width': '25vw', width: '25vw' }">
+    <Dialog v-model:visible="isShowDialogVisible" header="User details"  :style="{ 'max-width': '25vw', width: '25vw' }">
         <div class="flex flex-col gap-4">
             <div><strong>Email:</strong> {{ detailUserData.email }}</div>
             <div><strong>Full name:</strong> {{ detailUserData.full_name }}</div>

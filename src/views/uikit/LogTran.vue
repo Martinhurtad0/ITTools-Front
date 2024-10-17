@@ -49,23 +49,27 @@ export default {
         };
 
         async function loadLogs() {
-    if (selectedAgent.value && date.value) {
-        try {
-            const formattedDate = date.value.toISOString().split('T')[0].split('-').reverse().join('-');
-            const data = await LogService.filterLogsByDate(selectedAgent.value, formattedDate);
-            if (Array.isArray(data) && data.length > 0) {
-                logs.value = data;
-                showSuccess('Logs loaded successfully');
-            } else {
-                logs.value = [];
-                showError('No logs found for the selected date.'); // Mensaje de error si no hay logs
-            }
-        } catch (error) {
-            handleError(error);
+            if (selectedAgent.value && date.value && selectedRegion.value) {
+                // Verificar que los tres campos estén seleccionados
+                try {
+                    const formattedDate = date.value.toISOString().split('T')[0].split('-').reverse().join('-');
+                    const data = await LogService.filterLogsByDate(
+                        selectedAgent.value,
+                        formattedDate,
+                        selectedRegion.value // Asegúrate de enviar el ID de la región
+                    );
+                    if (Array.isArray(data) && data.length > 0) {
+                        logs.value = data;
+                        showSuccess('Logs loaded successfully');
+                    } else {
+                        logs.value = [];
+                        showError('No logs found for the selected date and region.');
+                    }
+                } catch (error) {
+                    handleError(error);
+                }
+            } 
         }
-    }
-}
-
 
         async function loadRegions() {
             try {
@@ -90,11 +94,12 @@ export default {
         }
 
         async function downloadSelectedLogs() {
-            if (selectedLogs.value.length > 0) { // Check if there are any selected logs
+            if (selectedLogs.value.length > 0) {
+                // Check if there are any selected logs
                 isLoading.value = true; // Open the loading modal
                 try {
                     // Mapea los nombres de archivo para pasar al servicio
-                    await LogService.zipLogFile(selectedAgent.value, selectedLogs.value);
+                    await LogService.zipLogFile(selectedAgent.value, selectedLogs.value, selectedRegion.value);
                     showSuccess('Logs downloaded successfully');
                 } catch (error) {
                     showError('Error downloading log file: ' + error.message);
@@ -155,17 +160,7 @@ export default {
                 <div class="mb-2">
                     <div class="font-semibold text-xl mb-4">Region details</div>
                     <label for="region" class="block text-sm font-medium mb-2">Region</label>
-                    <Dropdown 
-                        id="region" 
-                        v-model="selectedRegion" 
-                        :options="regions" 
-                        option-label="name" 
-                        option-value="id" 
-                        placeholder="Select region" 
-                        class="w-full" 
-                        filter 
-                        filterPlaceholder="Search region" 
-                    />
+                    <Dropdown id="region" v-model="selectedRegion" :options="regions" option-label="name" option-value="id" placeholder="Select region" class="w-full" filter filterPlaceholder="Search region" />
                 </div>
 
                 <div class="mb-2">
@@ -185,12 +180,7 @@ export default {
 
                 <div class="mb-2">
                     <label for="last-modified" class="block text-sm font-medium mb-2">Last modified</label>
-                    <Calendar 
-                        id="last-modified" 
-                        v-model="date" 
-                        class="w-full" 
-                        placeholder="Select date" 
-                    />
+                    <Calendar id="last-modified" v-model="date" class="w-full" placeholder="Select date" />
                 </div>
             </div>
 
@@ -225,14 +215,7 @@ export default {
         </div>
 
         <!-- Loading Modal -->
-        <Dialog 
-            v-model:visible="isLoading" 
-            modal 
-            :dismissableMask="false" 
-            :showHeader="false" 
-            :closable="false" 
-            style="width: 20%; height: 30%; display: flex; align-items: center; justify-content: center"
-        >
+        <Dialog v-model:visible="isLoading" modal :dismissableMask="false" :showHeader="false" :closable="false" style="width: 20%; height: 30%; display: flex; align-items: center; justify-content: center">
             <div class="flex flex-col items-center justify-center">
                 <ProgressSpinner />
                 <p class="mt-4">Downloading logs...</p>
@@ -240,15 +223,14 @@ export default {
         </Dialog>
 
         <div v-if="errorMessage" class="text-red-500 mt-4">{{ errorMessage }}</div>
-        <div v-else class=" mt-4 ml-4">
+        <div v-else class="mt-4 ml-4">
             <div class="flex items-center">
-                        <i class="pi pi-info-circle mr-2"></i>
-                        <span>If you don't find the log, remember that after 7 days, logs are moved to the archive module.</span>
-                    </div>
+                <i class="pi pi-info-circle mr-2"></i>
+                <span>If you don't find the log, remember that after 7 days, logs are moved to the archive module.</span>
+            </div>
         </div>
     </div>
 </template>
-
 
 <style scoped>
 #create-button {

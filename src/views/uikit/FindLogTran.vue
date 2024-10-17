@@ -40,7 +40,7 @@ export default {
         const transactionDate = ref('');
         const results = ref([]);
         const isDialogVisible = ref(false);
-        const isLoading = ref(false);
+        const isLoading = ref(false); // Estado de carga
 
         // Funciones de éxito y error
         const showSuccess = (detail) => {
@@ -101,16 +101,22 @@ export default {
                 return;
             }
 
-            isLoading.value = true;
+            if (!selectedRegion.value) { // Verificar que haya una región seleccionada
+                showError('Please select a region.');
+                return;
+            }
+
+            isLoading.value = true; // Iniciar carga
 
             try {
                 for (const agentId of selectedAgents.value) {
-                    const logsData = await LogService.getLogsByTransaction(agentId, transactionId.value, formattedDate);
+                    const logsData = await LogService.getLogsByTransaction(agentId, transactionId.value, formattedDate, selectedRegion.value); // Pasar la región
                     if (Array.isArray(logsData) && logsData.length > 0) {
                         logsData.forEach((log) => {
                             results.value.push({
                                 filename: log.filename,
-                                logs: log.logs.map((logMessage) => ({ message: logMessage }))
+                                logs: log.logs.map((logMessage) => ({ message: logMessage })),
+                                region: selectedRegion.value // Añadir la región a los resultados
                             });
                         });
                     }
@@ -125,7 +131,7 @@ export default {
             } catch (error) {
                 showError('An error occurred while searching for logs. Please check the transaction ID.');
             } finally {
-                isLoading.value = false;
+                isLoading.value = false; // Finalizar carga
             }
         }
 
@@ -137,11 +143,15 @@ export default {
 
             const filenames = results.value.map((result) => result.filename);
 
+            isLoading.value = true; // Iniciar carga
+
             try {
-                await LogService.zipLogFile(selectedAgents.value[0], filenames);
+                await LogService.zipLogFile(selectedAgents.value[0], filenames, selectedRegion.value);
                 showSuccess('Logs downloaded successfully');
             } catch (error) {
                 showError('An error occurred while downloading the logs.');
+            } finally {
+                isLoading.value = false; // Finalizar carga
             }
         }
 

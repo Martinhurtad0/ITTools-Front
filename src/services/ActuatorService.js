@@ -25,8 +25,15 @@ const ActuatorService = {
   async getUptime() {
     const response = await axios.get('/actuator/metrics/process.uptime');
     return response.data.measurements[0].value; // Devuelve el uptime en segundos
-  }
+  },
+
+  // ActuatorService.js
+  async getAuditData() {
+  return await axios.get('audits'); // Cambia la URL según tu API
 }
+
+}
+
 
 
 export default ActuatorService;

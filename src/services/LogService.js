@@ -2,9 +2,9 @@ import axios from '../axios'; // Importa tu configuración de axios
 
 const LogService = {
   // Obtener todos los logs para un agente específico
-  async getLogs(agentId) {
+  async getLogs(agentId, region) {
     try {
-      const response = await axios.get(`/logs/${agentId}`);
+      const response = await axios.get(`/logs/${agentId}?region=${region}`); // Añadir región como query param
       return response.data;
     } catch (error) {
       console.error('Error fetching logs:', error.message);
@@ -13,9 +13,9 @@ const LogService = {
   },
 
   // Obtener un archivo log específico para un agente
-  async getLogFile(agentId, filename) {
+  async getLogFile(agentId, filename, region) {
     try {
-      const response = await axios.get(`/logs/${agentId}/${filename}`);
+      const response = await axios.get(`/logs/${agentId}/${filename}?region=${region}`); // Añadir región
       return response.data;
     } catch (error) {
       console.error('Error fetching log file:', error.message);
@@ -24,9 +24,9 @@ const LogService = {
   },
 
   // Filtrar logs por fecha para un agente específico
-  async filterLogsByDate(agentId, date) {
+  async filterLogsByDate(agentId, date, region) {
     try {
-      const response = await axios.get(`/logs/filter/${agentId}?date=${date}`);
+      const response = await axios.get(`/logs/filter/${agentId}?date=${date}&region=${region}`); // Añadir región
       return response.data;
     } catch (error) {
       console.error('Error fetching logs by date:', error.message);
@@ -34,22 +34,22 @@ const LogService = {
     }
   },
 
-    // Filtrar logs_archive por fecha para un agente específico
-    async filterLogsArchiveByDate(agentId, date) {
-      try {
-        const response = await axios.get(`/logs/filter_archive/${agentId}?date=${date}`);
-        return response.data;
-      } catch (error) {
-        console.error('Error fetching logs by date:', error.message);
-        throw error;
-      }
-    },
+  // Filtrar logs_archive por fecha para un agente específico
+  async filterLogsArchiveByDate(agentId, date, region) {
+    try {
+      const response = await axios.get(`/logs/filter_archive/${agentId}?date=${date}&region=${region}`); // Añadir región
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching logs archive by date:', error.message);
+      throw error;
+    }
+  },
 
   // Método para zip de archivos log
-  async zipLogFile(agentId, filenames) {
+  async zipLogFile(agentId, filenames, region) {
     try {
       const response = await axios.post(
-        `/logs/zip/${agentId}`, 
+        `/logs/zip/${agentId}?region=${region}`,  // Añadir región como query param
         filenames,  // Envía directamente los nombres de los archivos
         {
           responseType: 'blob',  // Maneja la respuesta de archivo binario
@@ -82,9 +82,9 @@ const LogService = {
   },
 
   // Obtener logs por ID de transacción
-  async getLogsByTransaction(agentId, transactionId, date) {
+  async getLogsByTransaction(agentId, transactionId, date, region) {
     try {
-      const response = await axios.get(`/logs/transaction/${agentId}?transactionId=${transactionId}&date=${date}`);
+      const response = await axios.get(`/logs/transaction/${agentId}?transactionId=${transactionId}&date=${date}&region=${region}`); // Añadir región
       return response.data; // Asegúrate de que esto sea lo que esperas
     } catch (error) {
       console.error('Error fetching transaction logs:', error.message);
@@ -92,12 +92,12 @@ const LogService = {
     }
   },
 
-  // Buscar logs en archivos seleccionados
-  async searchLogsInSelectedFiles(agentId, idTransaction, selectedFiles) {
-    try {
+ // Buscar logs en archivos seleccionados
+async searchLogsInSelectedFiles(agentId, idTransaction, selectedFiles, region) {
+  try {
       // Validación de entrada
-      if (!idTransaction || !selectedFiles || selectedFiles.length === 0) {
-          throw new Error('idTransaction and selectedFiles are required.');
+      if (!idTransaction || !selectedFiles || selectedFiles.length === 0 || !region) {
+          throw new Error('idTransaction, selectedFiles, and region are required.');
       }
 
       // Preparar el cuerpo de la solicitud
@@ -107,16 +107,17 @@ const LogService = {
       };
 
       // Realizar la solicitud POST
-      const response = await axios.post(`/logs/search_selected/${agentId}`, requestBody);
+      const response = await axios.post(`/logs/search_selected/${agentId}?region=${region}`, requestBody);
 
       // Retornar la respuesta del servidor
       return response.data;
-    } catch (error) {
+  } catch (error) {
       console.error('Error searching logs in selected files:', error.message);
       // Aquí puedes manejar el error de una manera más específica si es necesario
       throw error;
-    }
   }
+}
+
 };
 
 export default LogService;

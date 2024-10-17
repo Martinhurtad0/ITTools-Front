@@ -54,22 +54,27 @@ export default {
         };
 
         async function loadLogs() {
-    if (selectedAgent.value && date.value) {
-        try {
-            const formattedDate = date.value.toISOString().split('T')[0].split('-').reverse().join('-');
-            const data = await LogService.filterLogsByDate(selectedAgent.value, formattedDate);
-            if (Array.isArray(data) && data.length > 0) {
-                logs.value = data;
-                showSuccess('Logs loaded successfully');
-            } else {
-                logs.value = [];
-                showError('No logs found for the selected date.'); // Mensaje de error si no hay logs
+            if (selectedAgent.value && date.value && selectedRegion.value) {
+                // Verificar que los tres campos estén seleccionados
+                try {
+                    const formattedDate = date.value.toISOString().split('T')[0].split('-').reverse().join('-');
+                    const data = await LogService.filterLogsByDate(
+                        selectedAgent.value,
+                        formattedDate,
+                        selectedRegion.value // Asegúrate de enviar el ID de la región
+                    );
+                    if (Array.isArray(data) && data.length > 0) {
+                        logs.value = data;
+                        showSuccess('Logs loaded successfully');
+                    } else {
+                        logs.value = [];
+                        showError('No logs found for the selected date and region.');
+                    }
+                } catch (error) {
+                    handleError(error);
+                }
             }
-        } catch (error) {
-            handleError(error);
         }
-    }
-}
 
 
         async function downloadSelectedLogs() {
@@ -77,7 +82,7 @@ export default {
                 console.log('Selected log files:', selectedLogFiles.value); // Verificar los archivos seleccionados
                 isLoading.value = true;
                 try {
-                    await LogService.zipLogFile(selectedAgent.value, selectedLogFiles.value);
+                    await LogService.zipLogFile(selectedAgent.value, selectedLogFiles.value, selectedRegion.value);
                     showSuccess('Log files downloaded successfully');
                 } catch (error) {
                     showError('Error downloading log file: ' + error.message);
@@ -90,45 +95,57 @@ export default {
         }
 
         async function searchLogsByTransaction() {
-            if (!transactionId.value) {
-                showError('Please enter a transaction ID.');
-                return;
+    if (!transactionId.value) {
+        showError('Please enter a transaction ID.');
+        return;
+    }
+
+    if (selectedLogFiles.value.length === 0) {
+        showError('Please select at least one log file.');
+        return;
+    }
+
+    // Asegúrate de que selectedRegion tenga un valor válido
+    if (!selectedRegion.value) {
+        showError('Please select a region.');
+        return;
+    }
+
+    isLoading.value = true;
+    try {
+        // Llama al servicio incluyendo la región
+        const data = await LogService.searchLogsInSelectedFiles(
+            selectedAgent.value,
+            transactionId.value,
+            selectedLogFiles.value,
+            selectedRegion.value // Pasar la región aquí
+        );
+
+        if (Array.isArray(data)) {
+            searchResults.value = data; // Store the results
+
+            if (searchResults.value.length > 0) {
+                showResultsModal.value = true; // Show the modal
+                showSuccess('Logs found successfully');
+            } else {
+                showError('No logs found for the provided transaction ID.');
             }
-
-            if (selectedLogFiles.value.length === 0) {
-                showError('Please select at least one log file.');
-                return;
-            }
-
-            isLoading.value = true;
-            try {
-                const data = await LogService.searchLogsInSelectedFiles(selectedAgent.value, transactionId.value, selectedLogFiles.value);
-
-                if (Array.isArray(data)) {
-                    searchResults.value = data; // Store the results
-
-                    if (searchResults.value.length > 0) {
-                        showResultsModal.value = true; // Show the modal
-                        showSuccess('Logs found successfully');
-                    } else {
-                        showError('No logs found for the provided transaction ID.');
-                    }
-                } else {
-                    showError('Error: Search results are not in the expected format.');
-                    searchResults.value = [];
-                }
-            } catch (error) {
-                // Handle server errors
-                if (error.response) {
-                    const errorMessage = error.response.data.message || 'No logs found for the provided transaction ID.';
-                    showError(errorMessage);
-                } else {
-                    showError('An error occurred while searching for logs. Please try again.');
-                }
-            } finally {
-                isLoading.value = false; // Hide loading indicator
-            }
+        } else {
+            showError('Error: Search results are not in the expected format.');
+            searchResults.value = [];
         }
+    } catch (error) {
+        // Manejar errores del servidor
+        if (error.response) {
+            const errorMessage = error.response.data.message || 'No logs found for the provided transaction ID.';
+            showError(errorMessage);
+        } else {
+            showError('An error occurred while searching for logs. Please try again.');
+        }
+    } finally {
+        isLoading.value = false; // Ocultar indicador de carga
+    }
+}
 
         function handleError(error) {
             if (error.message.includes('Network Error') || error.message.includes('I/O error')) {
