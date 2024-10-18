@@ -35,7 +35,6 @@ const model = ref([
             { label: 'Users', icon: 'pi pi-fw pi-users', to: '/uikit/Users' },
             { label: 'Roles', icon: 'pi pi-fw pi-shield', to: '/uikit/Roles' },
             { label: 'Regions', icon: 'pi pi-fw pi-globe', to: '/uikit/RegionList' },
-            { label: 'Services', icon: 'pi pi-fw pi-cog', to: '/uikit/Services' }
         ]
     },
     {
@@ -50,8 +49,8 @@ const model = ref([
         label: 'Logs',
         icon: 'pi pi-fw pi-folder', // Icono actualizado para Logs
         items: [
-            { label: 'Find Log Transactions', icon: 'pi pi-fw pi-search', to: '/uikit/FindLogTran' },
-            { label: 'Log Transfer', icon: 'pi pi-fw pi-share-alt', to: '/uikit/LogTran' },
+            { label: 'Multi find logs', icon: 'pi pi-fw pi-search', to: '/uikit/FindLogTran' },
+            { label: 'Log transfer', icon: 'pi pi-fw pi-share-alt', to: '/uikit/LogTran' },
             { label: 'Find in a log file', icon: 'pi pi-fw pi-search-plus', to: '/uikit/FindLog' },
             { label: 'Archive logs', icon: 'pi pi-fw pi-clock', to: '/uikit/ArchiveLog' }
         ]
@@ -61,17 +60,23 @@ const model = ref([
         icon: ' pi pi-database', 
         items: [
             { label: 'Jobs', icon: 'pi pi-fw pi-briefcase', to: '/uikit/Jobs' },
-            { label: 'Running Queries', icon: 'pi pi-fw  pi-spinner', to: '/uikit/Running' },
+            { label: 'Running queries', icon: 'pi pi-fw  pi-spinner', to: '/uikit/Running' },
             { label: 'Recycling', icon: 'pi pi-fw pi-refresh', to: '/uikit/Jobs' },
             { label: 'Propierties', icon: 'pi pi-fw pi-cog', to: '/uikit/Propierties' }
-        ]// Icono actualizado para Audit
+        ]
       
     },
 
     {
-        label: 'Audit',
-        icon: 'pi pi-fw pi-chart-line', // Icono actualizado para Audit
+        label: 'Audits',
+        icon: 'pi pi-fw pi-chart-line', 
         to: '/uikit/Audit'
+    },
+
+    {
+        label: 'Support',
+        icon: 'pi pi-fw pi-user', 
+        to: '/uikit/Support'
     },
 ]);
 </script>

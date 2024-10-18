@@ -24,6 +24,11 @@ export default {
         RadioButton // Agregar el componente RadioButton
     },
     setup() {
+        const breadcrumbItems = ref([
+            { label: 'Home', icon: 'pi pi-home', url: '/' },
+            { label: 'Logs', icon: 'pi pi-folder' },
+            { label: 'Find in a log file', icon: 'pi pi-search-plus', route: { name: 'FindLog' } }
+        ]);
         const regions = ref([]);
         const agents = ref([]);
         const selectedRegion = ref(null);
@@ -185,7 +190,8 @@ export default {
             showResultsModal, // Modal visibility
             searchResults, // Store search results
             searchLogsByTransaction,
-            downloadSelectedLogs
+            downloadSelectedLogs,
+            breadcrumbItems
         };
     }
 };
@@ -193,6 +199,14 @@ export default {
 
 <template>
     <div class="flex flex-col h-screen p-4">
+        <div class="w-full card p-1 mb-4">
+            <div class="header-container">
+                <div class="title font-semibold text-xl ml-4">Find in a log file</div>
+                <div class="breadcrumb-section mr-2">
+                    <Breadcrumb :model="breadcrumbItems" class="breadcrumb-item" />
+                </div>
+            </div>
+        </div>
         <div class="flex gap-6">
             <!-- First Half -->
             <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
@@ -358,4 +372,12 @@ button {
     color: #64c4ac;
     border-color: #64c4ac;
 }
+
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 </style>

@@ -44,12 +44,7 @@ const routes = [
                 component: () => import('@/views/uikit/Agents.vue'),
                 meta: { requiresAuth: true }
             },
-            {
-                path: '/uikit/Services',
-                name: 'Services',
-                component: () => import('@/views/uikit/Services.vue'),
-                meta: { requiresAuth: true }
-            },
+
             {
                 path: '/uikit/Roles',
                 name: 'Roles',
@@ -101,6 +96,12 @@ const routes = [
                 path: '/uikit/Running',
                 name: 'Running',
                 component: () => import('@/views/uikit/Running.vue'),
+                meta: { requiresAuth: true }
+            },
+            {
+                path: '/uikit/support',
+                name: 'Support',
+                component: () => import('@/views/uikit/Support.vue'),
                 meta: { requiresAuth: true }
             },
         ]

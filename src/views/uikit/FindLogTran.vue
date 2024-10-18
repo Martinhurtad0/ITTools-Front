@@ -6,6 +6,7 @@ import InputText from 'primevue/inputtext';
 import Calendar from 'primevue/calendar';
 import Button from 'primevue/button';
 import LogService from '@/services/LogService';
+import Breadcrumb from 'primevue/breadcrumb';
 import { regionService } from '@/services/RegionService';
 import { serverService } from '@/services/AgentService';
 import Dialog from 'primevue/dialog';
@@ -19,9 +20,15 @@ export default {
         Calendar,
         Button,
         Dialog,
-        ProgressSpinner
+        ProgressSpinner,
+        Breadcrumb
     },
     setup() {
+        const breadcrumbItems = ref([
+            { label: 'Home', icon: 'pi pi-home', url: '/' },
+            { label: 'Logs', icon: 'pi pi-folder' },
+            { label: 'Multi find log', icon: 'pi pi-search', route: { name: 'FindLogTran' } }
+        ]);
         const regions = ref([]);
         const agents = ref([]);
         const selectedRegion = ref(null);
@@ -147,7 +154,8 @@ export default {
             isDialogVisible,
             isLoading,
             searchTransaction,
-            downloadLogs
+            downloadLogs,
+            breadcrumbItems
         };
     }
 };
@@ -155,12 +163,22 @@ export default {
 
 <template>
     <div class="flex flex-col h-screen p-4">
+        <div class="w-full card p-1 mb-4">
+            <div class="header-container">
+                <div class="title font-semibold text-xl ml-4">Multi find log</div>
+                <div class="breadcrumb-section mr-2">
+                    <Breadcrumb :model="breadcrumbItems" class="breadcrumb-item" />
+                </div>
+            </div>
+        </div>
         <div class="flex gap-6">
+        
+            
             <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
                 <div class="mb-6">
-                    <div class="font-semibold text-xl mb-4">Region Details</div>
+                    <div class="font-semibold text-xl mb-4">Region details</div>
                     <label for="region" class="block text-sm font-medium mb-2">Region</label>
-                    <Dropdown id="region" v-model="selectedRegion" :options="regions" option-label="name" option-value="id" placeholder="Select Region" class="w-full" filter filterPlaceholder="Search Region" />
+                    <Dropdown id="region" v-model="selectedRegion" :options="regions" option-label="name" option-value="id" placeholder="Select region" class="w-full" filter filterPlaceholder="Search Region" />
                 </div>
 
                 <div class="mb-6 gap-4">
@@ -180,7 +198,7 @@ export default {
             </div>
 
             <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
-                <div class="font-semibold text-xl mb-4">Transaction Details</div>
+                <div class="font-semibold text-xl mb-4">Transaction details</div>
 
                 <div class="mb-4">
                     <label for="transaction-date" class="block text-sm font-medium mb-2">Transaction date</label>
@@ -189,7 +207,7 @@ export default {
 
                 <div class="mb-4">
                     <label for="transaction-id" class="block text-sm font-medium mb-2">Transaction ID</label>
-                    <InputText id="transaction-id" v-model="transactionId" type="text" class="w-full border rounded-lg p-3 focus:outline-none" placeholder="Enter Transaction ID" />
+                    <InputText id="transaction-id" v-model="transactionId" type="text" class="w-full border rounded-lg p-3 focus:outline-none" placeholder="Enter transaction ID" />
                 </div>
 
                 <div class="flex justify-end mt-4">
@@ -264,4 +282,12 @@ export default {
 .checkbox-margin {
     margin-left: 0.5rem;
 }
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
 </style>

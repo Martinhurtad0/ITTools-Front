@@ -9,6 +9,7 @@ import Checkbox from 'primevue/checkbox';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
+import Breadcrumb from 'primevue/breadcrumb';
 import { FilterMatchMode } from '@primevue/core/api';
 
 export default {
@@ -18,7 +19,8 @@ export default {
         Checkbox,
         DataTable,
         Column,
-        Dialog
+        Dialog,
+        Breadcrumb
     },
     setup() {
         const toast = useToast();
@@ -95,7 +97,26 @@ export default {
             userToChangeStatus: null,
             displayDeleteConfirmation: false,
             isActivating: false,
-            showAll: false // Variable para gestionar el estado de filtrado
+            showAll: false, // Variable para gestionar el estado de filtrado
+
+            // Definición del breadcrumb
+            home: {
+                icon: 'pi pi-home',
+                label: 'Home',
+                route: { name: 'dashboard' }
+            },
+            items: [
+            {
+                    label: 'Tools',
+                    icon: 'pi pi-fw pi-cog',
+                    route: { name: 'formlayout' }
+                },
+                {
+                    icon: 'pi pi-users',
+                    label: 'Users',
+                    route: { name: 'formlayout' }
+                }
+            ]
         };
     },
     async created() {
@@ -234,12 +255,18 @@ export default {
 <template>
     <div class="flex flex-col h-screen p-4">
         <div class="flex-2">
-            <div class="card p-4 flex flex-col gap-4 h-full">
-                <div class="font-semibold text-xl">Users</div>
+
+            <div class="card p-6 flex flex-col gap-2 h-full">
+                
+                <div class="header-container">
+                    <div class="title font-semibold text-xl">Users</div>
+                    <Breadcrumb :home="home" :model="items" />
+                </div>
+
                 <div class="flex justify-between items-center mb-2">
                     <!-- Agrupar los dos botones en un div con clase flex -->
                     <div class="flex gap-2">
-                        <Button label="Create User" icon="pi pi-plus" id="create-button"  @click="openCreateUserDialog" />
+                        <Button label="Create User" icon="pi pi-plus" id="create-button" @click="openCreateUserDialog" />
                         <Button label="Filter All" icon="pi pi-filter" id="close-button" @click="toggleFilter" />
                     </div>
                     <!-- Input de búsqueda al otro lado -->
@@ -365,7 +392,7 @@ export default {
                 </div>
 
                 <!-- Contenedor para alinear el botón al final -->
-                 <div class="flex justify-end mt-4">
+                <div class="flex justify-end mt-4">
                     <Button id="close-button" label="Close" @click="handleClose" style="margin-right: 8px" />
                     <Button id="create-button" type="submit" label="Save" />
                 </div>
@@ -427,26 +454,34 @@ export default {
 }
 
 #close-button {
-  background: #614d56;
-  color: white;
-  border-color: #614d56;
+    background: #614d56;
+    color: white;
+    border-color: #614d56;
 }
 
 #close-button:hover {
-  background: white;
-  color: #614d56;
-  border-color: #614d56;
+    background: white;
+    color: #614d56;
+    border-color: #614d56;
 }
 
 #create-button {
-  background: #64c4ac;
-  color: white;
-  border-color: #64c4ac;
+    background: #64c4ac;
+    color: white;
+    border-color: #64c4ac;
 }
 
 #create-button:hover {
-  background: white;
-  color: #64c4ac;
-  border-color: #64c4ac;
+    background: white;
+    color: #64c4ac;
+    border-color: #64c4ac;
 }
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: -1rem;
+}
+
 </style>

@@ -6,6 +6,7 @@ import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
+import Breadcrumb from 'primevue/breadcrumb';
 import { useToast } from 'primevue/usetoast';
 
 export default {
@@ -14,7 +15,8 @@ export default {
         Button,
         DataTable,
         Column,
-        Dialog
+        Dialog,
+        Breadcrumb
     },
     setup() {
         const toast = useToast();
@@ -59,7 +61,26 @@ export default {
             isActivating: false,
             filterActiveOnly: true,
             displayDeleteConfirmation: false,
-            regionToDelete: null
+          
+            regionToDelete: null,
+         // Definición del breadcrumb
+         home: {
+                icon: 'pi pi-home',
+                label: 'Home',
+                route: { name: 'dashboard' }
+            },
+            items: [
+            {
+                    label: 'Tools',
+                    icon: 'pi pi-fw pi-cog',
+                    route: { name: 'RegionList' }
+                },
+                {
+                    label: 'Regions',
+                    icon: 'pi pi-fw pi-globe',
+                    route: { name: 'RegionList' }
+                }
+            ]
         };
     },
     async created() {
@@ -213,8 +234,12 @@ export default {
 <template>
     <div class="flex flex-col h-screen p-4">
         <div class="flex-2">
-            <div class="card p-4 flex flex-col gap-4 h-full">
-                <div class="font-semibold text-xl">Regions</div>
+            <div class="card p-6 flex flex-col gap-2 h-full">
+                <!-- Agrupar los dos elementos: titulo y breadcrumb -->
+                <div class="header-container">
+                    <div class="title font-semibold text-xl">Regions</div>
+                    <Breadcrumb :home="home" :model="items" />
+                </div>
                 <div class="flex justify-between items-center mb-2">
                     <div class="flex gap-2">
                         <Button label="Create Region" icon="pi pi-plus" id="create-button" @click="openCreateRegionDialog" />
@@ -357,4 +382,12 @@ export default {
   color: #64c4ac;
   border-color: #64c4ac;
 }
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: -1rem;
+}
+
 </style>

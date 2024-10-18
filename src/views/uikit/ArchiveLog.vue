@@ -22,6 +22,11 @@ export default {
         Checkbox // Registra el componente Checkbox
     },
     setup() {
+        const breadcrumbItems = ref([
+            { label: 'Home', icon: 'pi pi-home', url: '/' },
+            { label: 'Logs', icon: 'pi pi-folder' },
+            { label: 'Archive logs', icon: 'pi pi-clock', route: { name: 'ArchiveLog' } }
+        ]);
         const regions = ref([]);
         const agents = ref([]);
         const selectedRegion = ref(null);
@@ -37,7 +42,7 @@ export default {
             if (selectedAgent.value && date.value) {
                 try {
                     const formattedDate = date.value.toISOString().split('T')[0].split('-').reverse().join('-'); // Formato DD-MM-YYYY
-                    const data = await LogService.filterLogsByDate(selectedAgent.value, formattedDate);
+                    const data = await LogService.filterLogsArchiveByDate(selectedAgent.value, formattedDate);
                     if (Array.isArray(data)) {
                         logs.value = data; // Guardar los nombres de archivo directamente
                     } else {
@@ -120,7 +125,8 @@ export default {
             selectedLogs,
             downloadSelectedLogs,
             errorMessage,
-            isLoading
+            isLoading,
+            breadcrumbItems
         };
     }
 };
@@ -128,6 +134,14 @@ export default {
 
 <template>
     <div class="flex flex-col h-screen p-4">
+        <div class="w-full card p-1 mb-4">
+            <div class="header-container">
+                <div class="title font-semibold text-xl ml-4">Archive logs</div>
+                <div class="breadcrumb-section mr-2">
+                    <Breadcrumb :model="breadcrumbItems" class="breadcrumb-item" />
+                </div>
+            </div>
+        </div>
         <div class="flex gap-6">
             <!-- Div para la primera mitad -->
             <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
@@ -264,5 +278,11 @@ td {
 .p-calendar {
     width: 100%; /* Asegura que el calendario ocupe el 100% del ancho del contenedor */
     border-radius: 0.25rem; /* Ajusta el borde del calendario */
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 </style>

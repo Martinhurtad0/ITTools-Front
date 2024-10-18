@@ -10,6 +10,7 @@ import Dialog from 'primevue/dialog';
 import Dropdown from 'primevue/dropdown';
 import InputText from 'primevue/inputtext';
 import FloatLabel from 'primevue/floatlabel';
+import Breadcrumb from 'primevue/breadcrumb';
 
 export default {
     components: {
@@ -19,7 +20,8 @@ export default {
         DataTable,
         Column,
         Dialog,
-        FloatLabel
+        FloatLabel,
+        Breadcrumb
     },
     setup() {
         const toast = useToast();
@@ -82,7 +84,26 @@ export default {
             },
             showCreateModal: false,
             serverToDelete: null,
-            filterActiveOnly: true
+            filterActiveOnly: true,
+
+              // Definición del breadcrumb
+              home: {
+                icon: 'pi pi-home',
+                label: 'Home',
+                route: { name: 'dashboard' }
+            },
+            items: [
+            {
+                    label: 'Servers',
+                    icon: 'pi pi-fw pi-server',
+                    route: { name: 'ServersDB' }
+                },
+                {
+                    icon: 'pi pi-fw pi-database',
+                    label: 'ServersDB',
+                    route: { name: 'ServersDB' }
+                }
+            ]
         };
     },
     async created() {
@@ -270,11 +291,16 @@ export default {
 <template>
     <div class="flex flex-col h-screen p-4">
         <div class="flex-2">
-            <div class="card p-4 flex flex-col gap-4 h-full">
-                <div class="font-semibold text-xl">Servers</div>
+            <div class="card p-6 flex flex-col gap-2 h-full">
+                <!-- Agrupar los dos elementos: titulo y breadcrumb -->
+                <div class="header-container">
+                    <div class="title font-semibold text-xl">ServersDB</div>
+                    <Breadcrumb :home="home" :model="items" />
+                </div>
+
                 <div class="flex justify-between items-center mb-2">
                     <div class="flex gap-2">
-                        <Button label="Create User" icon="pi pi-plus" id="create-button" @click="openCreateModal" />
+                        <Button label="Create ServerDB" icon="pi pi-plus" id="create-button" @click="openCreateModal" />
                         <Button label="Filter All" icon="pi pi-filter" id="close-button" @click="toggleFilter"  />
                     </div>
                     <InputText v-model="globalFilter" placeholder="Global search..." class="p-inputtext p-component" />
@@ -283,9 +309,9 @@ export default {
 
                 <div class="overflow-x-auto">
                     <DataTable :value="filteredServers" class="p-datatable-sm" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="servers.length" sortMode="multiple">
-                        <Column field="serverName" header="Server Name" sortable />
+                        <Column field="serverName" header="Server name" sortable />
                         <Column field="description" header="Description" sortable />
-                        <Column field="ipServer" header="IP Address" sortable />
+                        <Column field="ipServer" header="Ip address" sortable />
                         <Column field="serverDB" header="Server DB" sortable />
                         <Column field="region" header="Region" sortable>
                             <template #body="{ data }">
@@ -552,5 +578,12 @@ export default {
   background: white;
   color: #64c4ac;
   border-color: #64c4ac;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: -1rem;
 }
 </style>
