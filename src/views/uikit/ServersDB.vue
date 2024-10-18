@@ -52,7 +52,7 @@ export default {
                 userLogin: '',
                 password: '',
                 repeatPassword: '',
-                recyclingDB: '',
+                dbFR: '',
                 regionId: null
             },
             regions: [],
@@ -77,7 +77,7 @@ export default {
                 userLogin: '',
                 password: '',
                 repeatPassword: '',
-                recyclingDB: '',
+                dbFR: '',
                 regionId: null
             },
             showCreateModal: false,
@@ -135,7 +135,7 @@ export default {
                     serverDB: this.server.serverDB,
                     userLogin: this.server.userLogin,
                     password: this.server.password,
-                    recyclingDB: this.server.recyclingDB,
+                    dbFR: this.server.dbFR,
                     regionId: this.server.regionId ? Number(this.server.regionId) : null
                 };
                 await serverService.createServer(serverData);
@@ -208,7 +208,7 @@ export default {
                 userLogin: '',
                 password: '',
                 repeatPassword: '',
-                recyclingDB: '',
+                dbFR: '',
                 regionId: null
             };
             this.error = '';
@@ -359,7 +359,7 @@ export default {
                             <div class="flex flex-wrap gap-4">
                                 <div class="flex flex-col grow basis-0 gap-2 w-full">
                                     <label for="dbFR">DB FR</label>
-                                    <InputText id="dbFR" v-model="server.recyclingDB" class="p-inputtext-sm input-with-line" placeholder="Enter DB FR" />
+                                    <InputText id="dbFR" v-model="server.dbFR" class="p-inputtext-sm input-with-line" placeholder="Enter DB FR" />
                                 </div>
                                 <div class="flex flex-col grow basis-0 gap-2 w-full">
                                     <label for="regionDropdown">Region</label>
@@ -424,8 +424,8 @@ export default {
                         <InputText id="editUserLogin" type="text" v-model="editServerData.userLogin" class="p-inputtext-sm input-with-line" placeholder="Enter user login" />
                         <label for="editPassword">Password</label>
                         <InputText id="editPassword" type="password" v-model="editServerData.password" class="p-inputtext-sm input-with-line" placeholder="Enter password" required />
-                        <label for="editDbFR">Recycling DB</label>
-                        <InputText id="editDbFR" type="text" v-model="editServerData.recyclingDB" class="p-inputtext-sm input-with-line" placeholder="Recycling DB" />
+                        <label for="editDbFR">DB FR</label>
+                        <InputText id="editDbFR" type="text" v-model="editServerData.dbFR" class="p-inputtext-sm input-with-line" placeholder="Enter DB FR" />
                         <label for="editRegionId">Region</label>
                         <Dropdown id="editRegionId" v-model="editServerData.regionId" :options="regions" optionValue="idRegion" optionLabel="nameRegion" filter filterPlaceholder="Search..." class="custom-dropdown p-dropdown-sm" />
                     </div>
@@ -448,7 +448,7 @@ export default {
                 <p><strong>Instance:</strong> {{ detailServerData.instance }}</p>
                 <p><strong>Database Server:</strong> {{ detailServerData.serverDB }}</p>
                 <p><strong>User Login:</strong> {{ detailServerData.userLogin }}</p>
-                <p><strong>recyclingDB:</strong> {{ detailServerData.recyclingDB }}</p>
+                <p><strong>DBFR:</strong> {{ detailServerData.dbFR }}</p>
                 <p><strong>Region:</strong> {{ getRegionName(detailServerData.regionId) }}</p>
                 <p>
                     <strong>Status:</strong> <span :class="detailServerData.status ? 'text-green-500' : 'text-red-500'">{{ detailServerData.status ? 'Active' : 'Inactive' }}</span>

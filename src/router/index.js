@@ -103,12 +103,6 @@ const routes = [
                 component: () => import('@/views/uikit/Running.vue'),
                 meta: { requiresAuth: true }
             },
-            {
-                path: '/uikit/RecyclingPins',
-                name: 'RecyclingPins',
-                component: () => import('@/views/uikit/RecyclingPins.vue'),
-                meta: { requiresAuth: true }
-            },
         ]
     },
 ];
