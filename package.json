@@ -13,10 +13,11 @@
         "chart.js": "3.3.2",
         "dayjs": "^1.11.13",
         "primeicons": "^6.0.1",
-        "primevue": "^4.0.0",
+        "primevue": "^4.1.0",
         "vue": "^3.4.34",
         "vue-router": "^4.4.0",
-        "vue3-google-login": "^2.0.33"
+        "vue3-google-login": "^2.0.33",
+        "xlsx": "^0.18.5"
     },
     "devDependencies": {
         "@primevue/auto-import-resolver": "^4.0.1",

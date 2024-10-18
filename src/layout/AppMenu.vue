@@ -62,7 +62,7 @@ const model = ref([
         items: [
             { label: 'Jobs', icon: 'pi pi-fw pi-briefcase', to: '/uikit/Jobs' },
             { label: 'Running Queries', icon: 'pi pi-fw  pi-spinner', to: '/uikit/Running' },
-            { label: 'Recycling', icon: 'pi pi-fw pi-refresh', to: '/uikit/Jobs' },
+            { label: 'Recycling', icon: 'pi pi-fw pi-refresh', to: '/uikit/RecyclingPins' },
             { label: 'Propierties', icon: 'pi pi-fw pi-cog', to: '/uikit/Propierties' }
         ]// Icono actualizado para Audit
       

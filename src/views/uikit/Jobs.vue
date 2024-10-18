@@ -6,6 +6,7 @@ import DataTable from 'primevue/datatable';
 import Dialog from 'primevue/dialog';
 import Dropdown from 'primevue/dropdown';
 import RadioButton from 'primevue/radiobutton';
+import ProgressSpinner from 'primevue/progressspinner'; // Importar ProgressSpinner
 import { onMounted, ref, watch } from 'vue';
 
 export default {
@@ -16,6 +17,7 @@ export default {
         Dialog,
         DataTable,
         Column,
+        ProgressSpinner, // Incluir el componente ProgressSpinner
     },
     setup() {
         const regions = ref([]);
@@ -23,41 +25,53 @@ export default {
         const selectedRegion = ref(null);
         const filteredDB = ref([]);
         const selectedServerDB = ref(null);
-        const runningJobs = ref([]); // Para almacenar los trabajos en ejecución
-        const scheduledJobs = ref([]); // Para almacenar los trabajos programados
-        const modalVisible = ref(false); // Controlar la visibilidad del modal
-        const selectedJob = ref({}); // Para almacenar el trabajo seleccionado
-
+        const runningJobs = ref([]);
+        const scheduledJobs = ref([]);
+        const modalVisible = ref(false);
+        const selectedJob = ref({});
+        const isLoading = ref(false); // Estado para controlar la visibilidad del modal de carga
+        const breadcrumbItems = ref([
+            { label: 'Home', icon: 'pi pi-home', url: '/' },
+            { label: 'Database', icon: 'pi pi-database' },
+            { label: 'Jobs', icon: 'pi pi-briefcase', route: { name: 'Jobs' } }
+        ]);
         async function loadRegions() {
             try {
-                const response = await axios.get('/api/regions'); // Ajusta la URL según tu backend
+                isLoading.value = true; // Mostrar modal de carga
+                const response = await axios.get('/api/regions');
                 regions.value = response.data.map((region) => ({ name: region.nameRegion, id: region.idRegion }));
             } catch (error) {
                 console.error('Error fetching regions:', error.message);
+            } finally {
+                isLoading.value = false; // Ocultar modal de carga
             }
         }
 
         async function loadServersDB() {
             try {
-                const response = await axios.get('/api/serversdb'); // Ajusta la URL según tu backend
+                isLoading.value = true; // Mostrar modal de carga
+                const response = await axios.get('/api/serversdb');
                 ServersDB.value = response.data.filter((server) => server.status === 1);
             } catch (error) {
                 console.error('Error fetching servers:', error.message);
+            } finally {
+                isLoading.value = false; // Ocultar modal de carga
             }
         }
 
         async function loadJobs() {
             if (selectedServerDB.value) {
                 try {
-                    // Obtener trabajos en ejecución
+                    isLoading.value = true; // Mostrar modal de carga
                     const runningResponse = await axios.get(`/api/jobs/runningJobs/${selectedServerDB.value}`);
                     runningJobs.value = runningResponse.data;
 
-                    // Obtener trabajos programados
                     const scheduledResponse = await axios.get(`/api/jobs/scheduled/${selectedServerDB.value}`);
                     scheduledJobs.value = scheduledResponse.data;
                 } catch (error) {
                     console.error('Error fetching jobs:', error.message);
+                } finally {
+                    isLoading.value = false; // Ocultar modal de carga
                 }
             }
         }
@@ -71,8 +85,8 @@ export default {
         }
 
         function openModal(job) {
-            selectedJob.value = job; // Asigna el trabajo seleccionado al estado
-            modalVisible.value = true; // Abre el modal
+            selectedJob.value = job;
+            modalVisible.value = true;
         }
 
         onMounted(async () => {
@@ -81,7 +95,7 @@ export default {
         });
 
         watch(selectedRegion, filterServersByRegion);
-        watch(selectedServerDB, loadJobs); // Cargar trabajos cuando se seleccione un servidor
+        watch(selectedServerDB, loadJobs);
 
         return {
             regions,
@@ -94,6 +108,8 @@ export default {
             modalVisible,
             selectedJob,
             openModal,
+            isLoading,
+            breadcrumbItems // Retornar el estado del modal de carga
         };
     }
 };
@@ -101,46 +117,57 @@ export default {
 
 <template>
     <div class="flex flex-col h-screen p-4">
+        <!-- Modal de carga con ProgressSpinner -->
+        <Dialog v-model:visible="isLoading" modal :dismissableMask="false" :showHeader="false" :closable="false" style="width: 20%; height: 30%; display: flex; align-items: center; justify-content: center">
+            <div class="flex flex-col items-center justify-center">
+                <ProgressSpinner />
+                <p class="mt-4">Loading...</p>
+            </div>
+        </Dialog>
+
         <!-- Div para seleccionar la región -->
-        <div class="w-full card p-4 flex flex-col gap-4 mb-6">
+        <div class="card p-6 flex flex-col gap-2">
+                <!-- Agrupar los dos elementos: titulo y breadcrumb -->
+                <div class="header-container">
+                    <div class="title font-semibold text-xl">Jobs</div>
+                    <Breadcrumb :model="breadcrumbItems" class="breadcrumb-item" />
+                </div>
             <div class="font-semibold text-xl mb-4">Select Region</div>
-                <label for="region" class="block text-sm font-medium mb-2">Region</label>
-                <Dropdown 
-                    id="region" 
-                    v-model="selectedRegion" 
-                    :options="regions" 
-                    option-label="name" 
-                    option-value="id" 
-                    placeholder="Select Region" 
-                    class="w-full" 
-                    filter 
-                    filterPlaceholder="Search Region" 
-                    style="width: 30%;"
-                />
-                <div class="mb-6">
-                    <label class="block text-sm font-medium mb-3">ServersDB</label>
-                    <div class="flex flex-col gap-2">
-                        <div v-for="server in filteredDB" :key="server.idServer" class="flex items-center">
-                            <div class="flex items-center gap-2 radio-margin">
-                                <RadioButton v-model="selectedServerDB" :value="server.idServer" name="server" />
-                                <span class="text-sm">{{ server.serverName }}</span>
-                                <span class="text-sm">||</span>
-                                <span class="text-sm">{{ server.ipServer }}</span>
-                                <span class="text-sm">||</span>
-                                <span class="text-sm">{{ server.description }}</span>
-                            </div>
+            <label for="region" class="block text-sm font-medium mb-2">Region</label>
+            <Dropdown 
+                id="region" 
+                v-model="selectedRegion" 
+                :options="regions" 
+                option-label="name" 
+                option-value="id" 
+                placeholder="Select Region" 
+                class="w-full" 
+                filter 
+                filterPlaceholder="Search Region" 
+                style="width: 30%;"
+            />
+            <div class="mb-6">
+                <label class="block text-sm font-medium mb-3">ServersDB</label>
+                <div class="flex flex-col gap-2">
+                    <div v-for="server in filteredDB" :key="server.idServer" class="flex items-center">
+                        <div class="flex items-center gap-2 radio-margin">
+                            <RadioButton v-model="selectedServerDB" :value="server.idServer" name="server" />
+                            <span class="text-sm">{{ server.serverName }}</span>
+                            <span class="text-sm">||</span>
+                            <span class="text-sm">{{ server.ipServer }}</span>
+                            <span class="text-sm">||</span>
+                            <span class="text-sm">{{ server.description }}</span>
                         </div>
-                        <div v-if="filteredDB.length === 0" class="text-sm text-gray-500 mt-2">No servers found for the selected region</div>
                     </div>
+                    <div v-if="filteredDB.length === 0" class="text-sm text-gray-500 mt-2">No servers found for the selected region</div>
                 </div>
             </div>
-
-
+        </div>
 
         <!-- Div para mostrar trabajos en ejecución -->
         <div class="w-full card p-4 flex flex-col gap-4 mb-6">
             <h2 class="font-semibold text-lg mb-2">Running Jobs</h2>
-            <DataTable :value="runningJobs" class="p-datatable-sm" :paginator="true" :rows="rowsPerPage" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="runningJobs.length">
+            <DataTable :value="runningJobs" class="p-datatable-sm" :paginator="true" :rows="5" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="runningJobs.length">
                 <Column field="jobName" header="Job Name" sortable />
                 <Column field="startDate" header="Start Date" sortable />
                 <Column field="stopDate" header="Stop Date" sortable />
@@ -152,7 +179,7 @@ export default {
         <!-- Div para mostrar trabajos programados -->
         <div class="w-full card p-4 flex flex-col gap-4">
             <h2 class="font-semibold text-lg mb-2">Scheduled Jobs</h2>
-            <DataTable :value="scheduledJobs" class="p-datatable-sm" :paginator="true" :rows="rowsPerPage" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="scheduledJobs.length">
+            <DataTable :value="scheduledJobs" class="p-datatable-sm" :paginator="true" :rows="5" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="scheduledJobs.length">
                 <Column field="jobName" header="Job Name" sortable />
                 <Column field="scheduledDate" header="Scheduled Date" sortable />
                 <Column field="startDate" header="Start Date" sortable />
@@ -165,11 +192,6 @@ export default {
         <!-- Modal para mostrar detalles adicionales -->
         <Dialog v-model:visible.sync="modalVisible">
             <template #header>{{ selectedJob.jobName }}</template>
-
-            <!-- Contenido del modal -->
-            <!-- Aquí puedes agregar más detalles según sea necesario -->
-
-            <!-- Botón para cerrar el modal -->
             <template #footer>
                 <Button label="Close" @click.prevent="modalVisible = false" />
             </template>
@@ -178,10 +200,14 @@ export default {
     </div>
 </template>
 
-
-
 <style scoped>
 .radio-margin {
-    margin-left: 1rem; /* Ajusta el margen según sea necesario */
+    margin-left: 1rem;
+}
+.header-container {
+    margin-top: -1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 </style>
