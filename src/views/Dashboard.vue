@@ -247,25 +247,29 @@ chartOptionsAudits.value = setAuditChartOptions();
 function updateStatusCounter(statusCode, count, lastTimestamp) {
     switch (statusCode) {
         case 200:
-            if (status200.value !== count) {  // Solo actualiza si el valor ha cambiado
+            if (status200.value !== count) {
+                // Solo actualiza si el valor ha cambiado
                 status200.value = count;
                 lastUpdated200.value = formatDateTime(lastTimestamp); // Formatea la fecha
             }
             break;
         case 400:
-            if (status400.value !== count) {  // Solo actualiza si el valor ha cambiado
+            if (status400.value !== count) {
+                // Solo actualiza si el valor ha cambiado
                 status400.value = count;
                 lastUpdated400.value = formatDateTime(lastTimestamp); // Formatea la fecha
             }
             break;
         case 404:
-            if (status404.value !== count) {  // Solo actualiza si el valor ha cambiado
+            if (status404.value !== count) {
+                // Solo actualiza si el valor ha cambiado
                 status404.value = count;
                 lastUpdated404.value = formatDateTime(lastTimestamp); // Formatea la fecha
             }
             break;
         case 500:
-            if (status500.value !== count) {  // Solo actualiza si el valor ha cambiado
+            if (status500.value !== count) {
+                // Solo actualiza si el valor ha cambiado
                 status500.value = count;
                 lastUpdated500.value = formatDateTime(lastTimestamp); // Formatea la fecha
             }
@@ -275,8 +279,6 @@ function updateStatusCounter(statusCode, count, lastTimestamp) {
             break;
     }
 }
-
-
 
 // Luego en tu función fetchData puedes usar esta función para actualizar los valores
 async function fetchData() {
@@ -292,7 +294,7 @@ async function fetchData() {
             200: { count: 0, lastTimestamp: '' },
             400: { count: 0, lastTimestamp: '' },
             404: { count: 0, lastTimestamp: '' },
-            500: { count: 0, lastTimestamp: '' },
+            500: { count: 0, lastTimestamp: '' }
         };
 
         // Procesar cada solicitud para contar códigos de estado y obtener el último timestamp
@@ -315,12 +317,10 @@ async function fetchData() {
         updateStatusCounter(400, statusCountMap[400].count, statusCountMap[400].lastTimestamp);
         updateStatusCounter(404, statusCountMap[404].count, statusCountMap[404].lastTimestamp);
         updateStatusCounter(500, statusCountMap[500].count, statusCountMap[500].lastTimestamp);
-
     } catch (error) {
         console.error('Error:', error);
     }
 }
-
 
 // Función para formatear la fecha y hora
 function formatDateTime(dateTime) {
@@ -401,8 +401,8 @@ function formatDateTime(dateTime) {
                 <DataTable :value="requests" class="p-datatable-sm" :paginator="true" :rows="10" :totalRecords="requests.length" :sortField="'timestamp'" :sortOrder="-1" :emptyMessage="'No requests found'">
                     <Column field="requestUri" header="Request URI" :sortable="true" style="width: 25%"></Column>
                     <Column field="method" header="Method" :sortable="true" style="width: 20%"></Column>
-                    <Column field="statusCode" header="Status Code" :sortable="true" style="width: 15%"></Column>
-                    <Column field="timestamp" header="Timestamp" :sortable="true" style="width: 20%">
+                    <Column field="statusCode" header="Status code" :sortable="true" style="width: 15%"></Column>
+                    <Column field="timestamp" header="Date & time" :sortable="true" style="width: 20%">
                         <template #body="slotProps">
                             {{ formatDateTime(slotProps.data.timestamp) }}
                         </template>
@@ -449,11 +449,9 @@ function formatDateTime(dateTime) {
 
             <div class="card shadow-custom">
                 <div class="font-semibold text-xl mb-4">Activity</div>
-                <DataTable :value="filteredAudits" class="p-datatable-sm" :paginator="true" :rows="5" :totalRecords="audits.length"  :sortField="'dateTime'" 
-    :sortOrder="-1" 
-    :emptyMessage="'No requests found'" >
+                <DataTable :value="filteredAudits" class="p-datatable-sm" :paginator="true" :rows="5" :totalRecords="audits.length" :sortField="'dateTime'" :sortOrder="-1" :emptyMessage="'No requests found'">
                     <Column field="userAction" header="Action" sortable />
-                    <Column field="dateTime" header="Date & Time" sortable>
+                    <Column field="dateTime" header="Date & time" sortable>
                         <template #body="slotProps">
                             {{ formatDateTime(slotProps.data.dateTime) }}
                         </template>
