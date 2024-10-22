@@ -65,9 +65,7 @@ export default {
             regionToDelete: null,
          // Definición del breadcrumb
          home: {
-                icon: 'pi pi-home',
-                label: 'Home',
-                route: { name: 'dashboard' }
+            label: 'Home', icon: 'pi pi-home', url: '/' 
             },
             items: [
             {
@@ -234,7 +232,7 @@ export default {
 <template>
     <div class="flex flex-col h-screen p-4">
         <div class="flex-2">
-            <div class="card p-6 flex flex-col gap-2 h-full">
+            <div class="card p-6 flex flex-col gap-2 h-full shadow-custom">
                 <!-- Agrupar los dos elementos: titulo y breadcrumb -->
                 <div class="header-container">
                     <div class="title font-semibold text-xl">Regions</div>
@@ -390,4 +388,8 @@ export default {
     margin-top: -1rem;
 }
 
+.shadow-custom {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 8px; /* Opcional: redondear bordes */
+}
 </style>

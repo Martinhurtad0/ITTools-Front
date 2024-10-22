@@ -42,6 +42,7 @@ export default {
         const transactionId = ref('');
         const errorMessage = ref('');
         const isLoading = ref(false);
+        const isDowload = ref(false);
         const showResultsModal = ref(false); // Modal visibility
         const searchResults = ref([]); // Store search results
 
@@ -76,18 +77,17 @@ export default {
             }
         }
 
-
         async function downloadSelectedLogs() {
             if (selectedLogFiles.value.length > 0) {
                 console.log('Selected log files:', selectedLogFiles.value); // Verificar los archivos seleccionados
-                isLoading.value = true;
+                isDowload.value = true;
                 try {
                     await LogService.zipLogFile(selectedAgent.value, selectedLogFiles.value, selectedRegion.value);
                     showSuccess('Log files downloaded successfully');
                 } catch (error) {
                     showError('Error downloading log file: ' + error.message);
                 } finally {
-                    isLoading.value = false;
+                    isDowload.value = false;
                 }
             } else {
                 showError('Please select at least one log to download.');
@@ -95,57 +95,57 @@ export default {
         }
 
         async function searchLogsByTransaction() {
-    if (!transactionId.value) {
-        showError('Please enter a transaction ID.');
-        return;
-    }
-
-    if (selectedLogFiles.value.length === 0) {
-        showError('Please select at least one log file.');
-        return;
-    }
-
-    // Asegúrate de que selectedRegion tenga un valor válido
-    if (!selectedRegion.value) {
-        showError('Please select a region.');
-        return;
-    }
-
-    isLoading.value = true;
-    try {
-        // Llama al servicio incluyendo la región
-        const data = await LogService.searchLogsInSelectedFiles(
-            selectedAgent.value,
-            transactionId.value,
-            selectedLogFiles.value,
-            selectedRegion.value // Pasar la región aquí
-        );
-
-        if (Array.isArray(data)) {
-            searchResults.value = data; // Store the results
-
-            if (searchResults.value.length > 0) {
-                showResultsModal.value = true; // Show the modal
-                showSuccess('Logs found successfully');
-            } else {
-                showError('No logs found for the provided transaction ID.');
+            if (!transactionId.value) {
+                showError('Please enter a transaction ID.');
+                return;
             }
-        } else {
-            showError('Error: Search results are not in the expected format.');
-            searchResults.value = [];
+
+            if (selectedLogFiles.value.length === 0) {
+                showError('Please select at least one log file.');
+                return;
+            }
+
+            // Asegúrate de que selectedRegion tenga un valor válido
+            if (!selectedRegion.value) {
+                showError('Please select a region.');
+                return;
+            }
+
+            isLoading.value = true;
+            try {
+                // Llama al servicio incluyendo la región
+                const data = await LogService.searchLogsInSelectedFiles(
+                    selectedAgent.value,
+                    transactionId.value,
+                    selectedLogFiles.value,
+                    selectedRegion.value // Pasar la región aquí
+                );
+
+                if (Array.isArray(data)) {
+                    searchResults.value = data; // Store the results
+
+                    if (searchResults.value.length > 0) {
+                        showResultsModal.value = true; // Show the modal
+                        showSuccess('Logs found successfully');
+                    } else {
+                        showError('No logs found for the provided transaction ID.');
+                    }
+                } else {
+                    showError('Error: Search results are not in the expected format.');
+                    searchResults.value = [];
+                }
+            } catch (error) {
+                // Manejar errores del servidor
+                if (error.response) {
+                    const errorMessage = error.response.data.message || 'No logs found for the provided transaction ID.';
+                    showError(errorMessage);
+                } else {
+                    showError('An error occurred while searching for logs. Please try again.');
+                }
+            } finally {
+                isLoading.value = false; // Ocultar indicador de carga
+            }
         }
-    } catch (error) {
-        // Manejar errores del servidor
-        if (error.response) {
-            const errorMessage = error.response.data.message || 'No logs found for the provided transaction ID.';
-            showError(errorMessage);
-        } else {
-            showError('An error occurred while searching for logs. Please try again.');
-        }
-    } finally {
-        isLoading.value = false; // Ocultar indicador de carga
-    }
-}
 
         function handleError(error) {
             if (error.message.includes('Network Error') || error.message.includes('I/O error')) {
@@ -183,9 +183,11 @@ export default {
         });
 
         watch(selectedAgent, () => {
-            loadLogs(); // Cargar logs al seleccionar una fecha
-            selectedLogFiles.value = []; // Limpiar la selección de logs
-        });
+    logs.value = []; // Limpiar los logs al cambiar el agente
+    selectedLogFiles.value = []; // Limpiar la selección de logs
+    loadLogs(); // Cargar nuevos logs con el agente seleccionado
+});
+
         watch(date, () => {
             loadLogs(); // Cargar logs al seleccionar una fecha
             selectedLogFiles.value = []; // Limpiar la selección de logs
@@ -204,6 +206,7 @@ export default {
             transactionId,
             errorMessage,
             isLoading,
+            isDowload,
             showResultsModal, // Modal visibility
             searchResults, // Store search results
             searchLogsByTransaction,
@@ -214,10 +217,9 @@ export default {
 };
 </script>
 
-
 <template>
     <div class="flex flex-col h-screen p-4">
-        <div class="w-full card p-1 mb-4">
+        <div class="w-full card p-1 mb-4 shadow-custom">
             <div class="header-container">
                 <div class="title font-semibold text-xl ml-4">Find in a log file</div>
                 <div class="breadcrumb-section mr-2">
@@ -227,40 +229,44 @@ export default {
         </div>
         <div class="flex gap-6">
             <!-- First Half -->
-            <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
+            <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full shadow-custom">
                 <div class="mb-2">
                     <div class="font-semibold text-xl mb-4">Region details</div>
-                    <label for="region" class="block text-sm font-medium mb-2">Region</label>
-                    <Dropdown id="region" v-model="selectedRegion" :options="regions" option-label="name" option-value="id" placeholder="Select region" class="w-full" filter filterPlaceholder="Search region" />
-                </div>
 
-                <div class="mb-2">
-                    <label class="block text-sm font-medium mb-3">Agents</label>
-                    <div class="flex flex-col gap-2 ml-2">
-                        <div v-for="agent in filteredAgents" :key="agent.idAgent" class="flex items-center">
-                            <div class="flex items-center gap-2 radio-margin">
-                                <RadioButton v-model="selectedAgent" :value="agent.idAgent" name="agent" />
-                                <span class="text-sm">{{ agent.agentName }}</span>
-                                <span class="text-sm">||</span>
-                                <span class="text-sm">{{ agent.ipagent }}</span>
+                    <!-- Agrupamos el Dropdown y el Calendar en un div flex -->
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="flex-1">
+                            <label for="region" class="block text-sm font-medium mb-2">Region</label>
+                            <Dropdown id="region" v-model="selectedRegion" :options="regions" option-label="name" option-value="id" placeholder="Select region" class="w-full" filter filterPlaceholder="Search region" />
+
+                            <label for="last-modified" class="block text-sm font-medium mb-2 mt-4">Transation date</label>
+                            <Calendar id="last-modified" v-model="date" class="w-full" placeholder="Select date" />
+                        </div>
+
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium mb-3">Agents</label>
+                            <div class="flex flex-col gap-2 ml-4">
+                                <div v-for="agent in filteredAgents" :key="agent.idAgent" class="flex items-center">
+                                    <div class="flex items-center gap-2 radio-margin">
+                                        <RadioButton v-model="selectedAgent" :value="agent.idAgent" name="agent" />
+                                        <span class="text-sm">{{ agent.agentName }}</span>
+                                        <span class="text-sm">||</span>
+                                        <span class="text-sm">{{ agent.ipagent }}</span>
+                                    </div>
+                                </div>
+                                <div v-if="filteredAgents.length === 0" class="text-sm text-gray-500">No agents found for the selected region</div>
                             </div>
                         </div>
-                        <div v-if="filteredAgents.length === 0" class="text-sm text-gray-500 mt-2">No agents found for the selected region</div>
                     </div>
-                </div>
-
-                <div class="mb-4">
-                    <label for="last-modified" class="block text-sm font-medium mb-2">Last modified</label>
-                    <Calendar id="last-modified" v-model="date" class="w-full" placeholder="Select date" />
                 </div>
             </div>
 
             <!-- Second Half -->
-            <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
+            <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full shadow-custom">
                 <div class="font-semibold text-xl">Log files</div>
 
                 <div v-if="logs.length > 0" class="mb-2 ml-2">
-                    <table class=" w-full table-auto border-collapse border border-gray-200 ">
+                    <table class="w-full table-auto border-collapse border border-gray-200">
                         <thead>
                             <tr class="text-white" style="background-color: #614d56">
                                 <th class="text-left p-2">Log files</th>
@@ -279,10 +285,13 @@ export default {
                     </table>
                 </div>
 
-                <div v-else class="text-sm text-gray-500">No logs available.</div>
-                <div class="mb-4">
-                    <label for="transaction-id" class="block text-sm font-medium mb-2">Transaction ID</label>
-                    <InputText id="transaction-id" v-model="transactionId" type="text" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter transaction ID" />
+                <div v-else class="text-sm text-gray-500 ml-2">No logs available.</div>
+
+                <div class="mb-4 flex justify-end items-center">
+                    <div class="flex items-center">
+                        <label for="transaction-id" class="block text-sm font-medium mb-0 mr-2">Transaction ID</label>
+                        <InputText id="transaction-id" v-model="transactionId" type="text" class="border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter transaction ID" />
+                    </div>
                 </div>
 
                 <div class="flex justify-end">
@@ -305,7 +314,7 @@ export default {
 
                     <!-- Botones alineados a la derecha -->
                     <div class="flex">
-                        <Button id="create-button" @click="downloadSelectedLogs" label="Download logs" icon="pi pi-download" :loading="isLoading" class="mr-2" />
+                        <Button id="create-button" @click="downloadSelectedLogs" label="Download logs" icon="pi pi-download" :loading="isDowload" class="mr-2" />
                         <Button label="Close" id="close-button" @click="showResultsModal = false" />
                     </div>
                 </div>
@@ -335,12 +344,20 @@ export default {
             </div>
         </Dialog>
 
+         <!-- Modal de carga -->
+         <Dialog v-model:visible="isDowload" modal :dismissableMask="false" :showHeader="false" :closable="false" style="width: 20%; height: 30%; display: flex; align-items: center; justify-content: center">
+            <div class="flex flex-col items-center justify-center">
+                <ProgressSpinner />
+                <p class="mt-4">Downloading logs...</p>
+            </div>
+        </Dialog>
+
         <div v-if="errorMessage" class="text-red-500 mt-4">{{ errorMessage }}</div>
-        <div v-else class=" mt-4 ml-4">
+        <div v-else class="mt-4 ml-4">
             <div class="flex items-center">
-                        <i class="pi pi-info-circle mr-2"></i>
-                        <span>In this module you can search for a transaction in one or several logs of an agent.</span>
-                    </div>
+                <i class="pi pi-info-circle mr-2"></i>
+                <span>In this module you can search for a transaction in one or several logs of an agent.</span>
+            </div>
         </div>
     </div>
 </template>
@@ -416,5 +433,10 @@ button {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.shadow-custom {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 8px; /* Opcional: redondear bordes */
 }
 </style>

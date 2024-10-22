@@ -56,7 +56,7 @@ export default {
 <template>
     <div class="flex flex-col h-screen p-4">
         <!-- Contenido con la imagen y el formulario de contacto -->
-        <div class="card p-6 flex flex-col">
+        <div class="card p-6 flex flex-col shadow-custom">
             <!-- Agrupar los dos elementos: titulo y breadcrumb -->
             <div class="header-container">
                 <div class="title font-semibold text-xl">Support</div>
@@ -161,5 +161,9 @@ img {
     outline: none;
     box-shadow: none;
     margin-bottom: 0.5rem;
+}
+.shadow-custom {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 8px; /* Opcional: redondear bordes */
 }
 </style>

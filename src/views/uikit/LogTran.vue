@@ -27,7 +27,7 @@ export default {
         const breadcrumbItems = ref([
             { label: 'Home', icon: 'pi pi-home', url: '/' },
             { label: 'Logs', icon: 'pi pi-folder' },
-            { label: 'Log transfer', icon: 'pi pi-share-alt', route: { name: 'LogTran' } }
+            { label: 'Logs', icon: 'pi pi-share-alt', route: { name: 'LogTran' } }
         ]);
         const regions = ref([]);
         const agents = ref([]);
@@ -68,7 +68,7 @@ export default {
                 } catch (error) {
                     handleError(error);
                 }
-            } 
+            }
         }
 
         async function loadRegions() {
@@ -117,8 +117,9 @@ export default {
         });
 
         watch(selectedAgent, () => {
+            logs.value = []; // Limpiar los logs al cambiar el agente
             loadLogs(); // Cargar logs al seleccionar una fecha
-            selectedLogs.value = []; // Limpiar la selección de logs
+            selectedLogs.value =[]; // Limpiar la selección de logs
         });
         watch(date, () => {
             loadLogs(); // Cargar logs al seleccionar una fecha
@@ -146,9 +147,9 @@ export default {
 
 <template>
     <div class="flex flex-col h-screen p-4">
-        <div class="w-full card p-1 mb-4">
+        <div class="w-full card p-1 mb-4 shadow-custom">
             <div class="header-container">
-                <div class="title font-semibold text-xl ml-4">Log transfer</div>
+                <div class="title font-semibold text-xl ml-4">Logs</div>
                 <div class="breadcrumb-section mr-2">
                     <Breadcrumb :model="breadcrumbItems" class="breadcrumb-item" />
                 </div>
@@ -156,36 +157,60 @@ export default {
         </div>
         <div class="flex gap-6">
             <!-- Div for the first half -->
-            <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
-                <div class="mb-2">
-                    <div class="font-semibold text-xl mb-4">Region details</div>
-                    <label for="region" class="block text-sm font-medium mb-2">Region</label>
-                    <Dropdown id="region" v-model="selectedRegion" :options="regions" option-label="name" option-value="id" placeholder="Select region" class="w-full" filter filterPlaceholder="Search region" />
-                </div>
-
-                <div class="mb-2">
-                    <label class="block text-sm font-medium mb-3">Agents</label>
-                    <div class="flex flex-col gap-2 ml-2">
-                        <div v-for="agent in filteredAgents" :key="agent.idAgent" class="flex items-center">
-                            <div class="flex items-center gap-2 radio-margin">
-                                <RadioButton v-model="selectedAgent" :value="agent.idAgent" name="agent" />
-                                <span class="text-sm">{{ agent.agentName }}</span>
-                                <span class="text-sm">||</span>
-                                <span class="text-sm">{{ agent.ipagent }}</span>
-                            </div>
-                        </div>
-                        <div v-if="filteredAgents.length === 0" class="text-sm text-gray-500 mt-2">No agents found for the selected region</div>
-                    </div>
-                </div>
-
-                <div class="mb-2">
-                    <label for="last-modified" class="block text-sm font-medium mb-2">Last modified</label>
-                    <Calendar id="last-modified" v-model="date" class="w-full" placeholder="Select date" />
-                </div>
+            <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full shadow-custom">
+    <div class="mb-2">
+        <div class="font-semibold text-xl mb-4">Region details</div>
+        
+        <!-- Agrupamos el Dropdown y el Calendar en un div flex -->
+        <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex-1">
+                <label for="region" class="block text-sm font-medium mb-2">Region</label>
+                <Dropdown 
+                    id="region" 
+                    v-model="selectedRegion" 
+                    :options="regions" 
+                    option-label="name" 
+                    option-value="id" 
+                    placeholder="Select region" 
+                    class="w-full" 
+                    filter 
+                    filterPlaceholder="Search region" 
+                />
+                
+                <label for="last-modified" class="block text-sm font-medium mb-2 mt-4">Transaction date</label>
+                <Calendar 
+                    id="last-modified" 
+                    v-model="date" 
+                    class="w-full" 
+                    placeholder="Select date" 
+                />
             </div>
 
+            <div class="flex-1">
+                <label class="block text-sm font-medium mb-3">Agents</label>
+                <div class="flex flex-col gap-2 ml-4">
+                    <div v-for="agent in filteredAgents" :key="agent.idAgent" class="flex items-center">
+                        <div class="flex items-center gap-2 radio-margin">
+                            <RadioButton 
+                                v-model="selectedAgent" 
+                                :value="agent.idAgent" 
+                                name="agent" 
+                            />
+                            <span class="text-sm">{{ agent.agentName }}</span>
+                            <span class="text-sm">||</span>
+                            <span class="text-sm">{{ agent.ipagent }}</span>
+                        </div>
+                    </div>
+                    <div v-if="filteredAgents.length === 0" class="text-sm text-gray-500 ">No agents found for the selected region</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
             <!-- Div for the second half -->
-            <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full">
+            <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full shadow-custom">
                 <div class="font-semibold text-xl">Log files</div>
 
                 <div v-if="logs.length > 0" class="mb-2 ml-2">
@@ -210,7 +235,7 @@ export default {
                         <Button label="Download logs" icon="pi pi-download" id="create-button" @click="downloadSelectedLogs" />
                     </div>
                 </div>
-                <div v-else class="text-sm text-gray-500">No logs available.</div>
+                <div v-else class="text-sm text-gray-500 ml-2">No logs available.</div>
             </div>
         </div>
 
@@ -285,5 +310,10 @@ td {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.shadow-custom {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 8px; /* Opcional: redondear bordes */
 }
 </style>

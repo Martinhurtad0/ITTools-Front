@@ -51,7 +51,7 @@ const model = ref([
         items: [
             { label: 'Find in a log file', icon: 'pi pi-fw pi-search-plus', to: '/uikit/FindLog' },
             { label: 'Multi find logs', icon: 'pi pi-fw pi-search', to: '/uikit/FindLogTran' },
-            { label: 'Logs transfer', icon: 'pi pi-fw pi-share-alt', to: '/uikit/LogTran' },
+            { label: 'Logs', icon: 'pi pi-fw pi-share-alt', to: '/uikit/LogTran' },
             { label: 'Archive logs', icon: 'pi pi-fw pi-clock', to: '/uikit/ArchiveLog' }
         ]
     },

@@ -40,9 +40,7 @@ export default {
 
             ],
             home: {
-                icon: 'pi pi-home',
-                label: 'Home',
-                route: { name: 'dashboard' }
+                label: 'Home', icon: 'pi pi-home', url: '/' 
             },
             items: [
                 {
@@ -109,7 +107,7 @@ export default {
     <div class="flex flex-col h-screen p-4">
         <!-- Contenedor de la DataTable -->
         <div class="flex-2">
-            <div class="card p-6 flex flex-col gap-2 h-full">
+            <div class="card p-6 flex flex-col gap-2 h-full shadow-custom">
                 <div class="header-container">
                     <div class="title font-semibold text-xl">Audits</div>
                     <Breadcrumb :home="home" :model="items" />
@@ -150,5 +148,10 @@ export default {
     justify-content: space-between;
     align-items: center;
     margin-top: -1rem;
+}
+
+.shadow-custom {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 8px; /* Opcional: redondear bordes */
 }
 </style>

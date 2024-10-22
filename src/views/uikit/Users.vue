@@ -101,9 +101,7 @@ export default {
 
             // Definición del breadcrumb
             home: {
-                icon: 'pi pi-home',
-                label: 'Home',
-                route: { name: 'dashboard' }
+                label: 'Home', icon: 'pi pi-home', url: '/' 
             },
             items: [
             {
@@ -256,7 +254,7 @@ export default {
     <div class="flex flex-col h-screen p-4">
         <div class="flex-2">
 
-            <div class="card p-6 flex flex-col gap-2 h-full">
+            <div class="card p-6 flex flex-col gap-2 h-full shadow-custom " >
                 
                 <div class="header-container">
                     <div class="title font-semibold text-xl">Users</div>
@@ -274,8 +272,7 @@ export default {
                 </div>
 
                 <div class="overflow-x-auto">
-                    <DataTable :value="filteredUsers" class="p-datatable-sm" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="users.length" sortMode="multiple"
-                    :sortOrder="-1">
+                    <DataTable :value="filteredUsers" class="p-datatable-sm" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" :totalRecords="users.length" sortMode="multiple">
                         <Column field="full_name" header="Full name" sortable />
                         <Column field="area" header="Area" sortable />
                         <Column field="roles" header="Roles" sortable>
@@ -485,4 +482,8 @@ export default {
     margin-top: -1rem;
 }
 
+.shadow-custom {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 8px; /* Opcional: redondear bordes */
+}
 </style>
