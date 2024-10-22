@@ -95,16 +95,24 @@ export default {
 
         async function downloadSelectedLogs() {
             if (selectedLogs.value.length > 0) {
-                // Check if there are any selected logs
-                isLoading.value = true; // Open the loading modal
+                // Verificar si hay logs seleccionados
+                isLoading.value = true; // Abrir el modal de carga
                 try {
-                    // Mapea los nombres de archivo para pasar al servicio
-                    await LogService.zipLogFile(selectedAgent.value, selectedLogs.value, selectedRegion.value);
+                    // Encontrar la IP del agente seleccionado
+                    const agent = agents.value.find((a) => a.idAgent === selectedAgent.value);
+                    const agentIp = agent?.ipagent || 'UnknownIP'; // Usar un valor por defecto si la IP no existe
+
+                    // Obtener el nombre de la región
+                    const regionName = regions.value.find((region) => region.id === selectedRegion.value)?.name || 'UnknownRegion'; // Obtener el nombre de la región
+
+                    // Llamar al servicio pasándole la región y la IP como parámetros
+                    await LogService.zipLogFile(selectedAgent.value, selectedLogs.value, regionName, agentIp);
+
                     showSuccess('Logs downloaded successfully');
                 } catch (error) {
                     showError('Error downloading log file: ' + error.message);
                 } finally {
-                    isLoading.value = false; // Close the loading modal
+                    isLoading.value = false; // Cerrar el modal de carga
                 }
             } else {
                 showError('Please select at least one log to download.');
@@ -158,56 +166,36 @@ export default {
         <div class="flex gap-6">
             <!-- Div para la primera mitad -->
             <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full shadow-custom">
-    <div class="mb-2">
-        <div class="font-semibold text-xl mb-4">Region details</div>
-        
-        <!-- Agrupamos el Dropdown y el Calendar en un div flex -->
-        <div class="flex flex-col md:flex-row gap-4">
-            <div class="flex-1">
-                <label for="region" class="block text-sm font-medium mb-2">Region</label>
-                <Dropdown 
-                    id="region" 
-                    v-model="selectedRegion" 
-                    :options="regions" 
-                    option-label="name" 
-                    option-value="id" 
-                    placeholder="Select region" 
-                    class="w-full" 
-                    filter 
-                    filterPlaceholder="Search region" 
-                />
-                
-                <label for="last-modified" class="block text-sm font-medium mb-2 mt-4">Transaction date</label>
-                <Calendar 
-                    id="last-modified" 
-                    v-model="date" 
-                    class="w-full" 
-                    placeholder="Select date" 
-                />
-            </div>
+                <div class="mb-2">
+                    <div class="font-semibold text-xl mb-4">Region details</div>
 
-            <div class="flex-1">
-                <label class="block text-sm font-medium mb-3">Agents</label>
-                <div class="flex flex-col gap-2 ml-4">
-                    <div v-for="agent in filteredAgents" :key="agent.idAgent" class="flex items-center">
-                        <div class="flex items-center gap-2 radio-margin">
-                            <RadioButton 
-                                v-model="selectedAgent" 
-                                :value="agent.idAgent" 
-                                name="agent" 
-                            />
-                            <span class="text-sm">{{ agent.agentName }}</span>
-                            <span class="text-sm">||</span>
-                            <span class="text-sm">{{ agent.ipagent }}</span>
+                    <!-- Agrupamos el Dropdown y el Calendar en un div flex -->
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="flex-1">
+                            <label for="region" class="block text-sm font-medium mb-2">Region</label>
+                            <Dropdown id="region" v-model="selectedRegion" :options="regions" option-label="name" option-value="id" placeholder="Select region" class="w-full" filter filterPlaceholder="Search region" />
+
+                            <label for="last-modified" class="block text-sm font-medium mb-2 mt-4">Transaction date</label>
+                            <Calendar id="last-modified" v-model="date" class="w-full" placeholder="Select date" />
+                        </div>
+
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium mb-3">Agents</label>
+                            <div class="flex flex-col gap-2 ml-4">
+                                <div v-for="agent in filteredAgents" :key="agent.idAgent" class="flex items-center">
+                                    <div class="flex items-center gap-2 radio-margin">
+                                        <RadioButton v-model="selectedAgent" :value="agent.idAgent" name="agent" />
+                                        <span class="text-sm">{{ agent.agentName }}</span>
+                                        <span class="text-sm">||</span>
+                                        <span class="text-sm">{{ agent.ipagent }}</span>
+                                    </div>
+                                </div>
+                                <div v-if="filteredAgents.length === 0" class="text-sm text-gray-500">No agents found for the selected region</div>
+                            </div>
                         </div>
                     </div>
-                    <div v-if="filteredAgents.length === 0" class="text-sm text-gray-500 ">No agents found for the selected region</div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
 
             <!-- Div para la segunda mitad -->
             <div class="w-full md:w-1/2 card p-4 flex flex-col gap-4 h-full shadow-custom">

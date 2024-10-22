@@ -78,21 +78,30 @@ export default {
         }
 
         async function downloadSelectedLogs() {
-            if (selectedLogFiles.value.length > 0) {
-                console.log('Selected log files:', selectedLogFiles.value); // Verificar los archivos seleccionados
-                isDowload.value = true;
-                try {
-                    await LogService.zipLogFile(selectedAgent.value, selectedLogFiles.value, selectedRegion.value);
-                    showSuccess('Log files downloaded successfully');
-                } catch (error) {
-                    showError('Error downloading log file: ' + error.message);
-                } finally {
-                    isDowload.value = false;
-                }
-            } else {
-                showError('Please select at least one log to download.');
-            }
+    if (selectedLogFiles.value.length > 0) {
+        console.log('Selected log files:', selectedLogFiles.value); // Verificar los archivos seleccionados
+        isDowload.value = true;
+
+        try {
+            // Encontrar la IP del agente seleccionado
+            const agent = agents.value.find(a => a.idAgent === selectedAgent.value);
+            const agentIp = agent?.ipagent || 'UnknownIP'; // Usar un valor por defecto si la IP no existe
+            const regionName = regions.value.find(region => region.id === selectedRegion.value)?.name || 'UnknownRegion'; // Obtener el nombre de la región
+
+            // Llamar al servicio pasándole la región y la IP como parámetros
+            await LogService.zipLogFile(selectedAgent.value, selectedLogFiles.value, regionName, agentIp);
+
+            showSuccess('Log files downloaded successfully');
+        } catch (error) {
+            showError('Error downloading log file: ' + error.message);
+        } finally {
+            isDowload.value = false;
         }
+    } else {
+        showError('Please select at least one log to download.');
+    }
+}
+
 
         async function searchLogsByTransaction() {
             if (!transactionId.value) {

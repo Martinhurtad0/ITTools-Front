@@ -37,7 +37,7 @@ async function fetchRegionAndAgentData() {
         regions.value = await regionService.getAllRegions();
         agents.value = await serverService.getAllServers(); // Obtener servidores (agentes)
     } catch (error) {
-        console.error('Error al obtener datos de regiones o agentes:', error);
+        console.error('Error:', error);
     }
 }
 
@@ -78,7 +78,7 @@ onMounted(async () => {
 // Función para analizar los mensajes de auditoría
 function parseAuditMessage(userAction = '') {
     if (typeof userAction !== 'string') {
-        console.error('El mensaje no es una cadena válida:', userAction);
+        console.error('No valid:', userAction);
         return {
             regionId: null,
             agentId: null
@@ -105,7 +105,7 @@ async function fetchAuditData() {
 
         processAuditData(); // Procesar los datos de auditoría
     } catch (error) {
-        console.error('Error al obtener los datos de auditoría:', error);
+        console.error('Error:', error);
     }
 }
 
@@ -130,7 +130,7 @@ function processAuditData() {
     audits.value.forEach((audit) => {
         // Verifica que audit.userAction esté definido antes de procesarlo
         if (!audit.userAction) {
-            console.error('El registro de auditoría no contiene un campo userAction válido:', audit);
+            console.error('Invalid action:', audit);
             return;
         }
 
@@ -244,55 +244,83 @@ function setAuditChartOptions() {
 chartOptionsAudits.value = setAuditChartOptions();
 
 // Función para obtener datos generales
-function updateStatusCounter(statusCode, count) {
-    const currentDate = new Date().toLocaleString(); // Fecha actual
-
+function updateStatusCounter(statusCode, count, lastTimestamp) {
     switch (statusCode) {
         case 200:
-            status200.value = count;
-            lastUpdated200.value = currentDate; // Actualiza solo para 200
+            if (status200.value !== count) {  // Solo actualiza si el valor ha cambiado
+                status200.value = count;
+                lastUpdated200.value = formatDateTime(lastTimestamp); // Formatea la fecha
+            }
             break;
         case 400:
-            status400.value = count;
-            lastUpdated400.value = currentDate; // Actualiza solo para 400
+            if (status400.value !== count) {  // Solo actualiza si el valor ha cambiado
+                status400.value = count;
+                lastUpdated400.value = formatDateTime(lastTimestamp); // Formatea la fecha
+            }
             break;
         case 404:
-            status404.value = count;
-            lastUpdated404.value = currentDate; // Actualiza solo para 404
+            if (status404.value !== count) {  // Solo actualiza si el valor ha cambiado
+                status404.value = count;
+                lastUpdated404.value = formatDateTime(lastTimestamp); // Formatea la fecha
+            }
             break;
         case 500:
-            status500.value = count;
-            lastUpdated500.value = currentDate; // Actualiza solo para 500
+            if (status500.value !== count) {  // Solo actualiza si el valor ha cambiado
+                status500.value = count;
+                lastUpdated500.value = formatDateTime(lastTimestamp); // Formatea la fecha
+            }
             break;
         default:
+            console.warn(`Code error: ${statusCode}`);
             break;
     }
 }
+
+
 
 // Luego en tu función fetchData puedes usar esta función para actualizar los valores
 async function fetchData() {
     try {
-        const responseData = await ActuatorService.getRequest();
-        const response = await ActuatorService.getHealth();
-        healthInfo.value = response;
-        requests.value = responseData;
-        uptime.value = Math.floor(await ActuatorService.getUptime());
+        const responseData = await ActuatorService.getRequest(); // Obtener datos de las solicitudes
+        const response = await ActuatorService.getHealth(); // Obtener datos de salud
+        healthInfo.value = response; // Almacenar la información de salud
+        requests.value = responseData; // Almacenar las solicitudes
+        uptime.value = Math.floor(await ActuatorService.getUptime()); // Obtener y almacenar el uptime
 
-        // Calcular el número de respuestas para cada código de estado
-        const status200Count = requests.value.filter((request) => request.statusCode === 200).length;
-        const status400Count = requests.value.filter((request) => request.statusCode === 400).length;
-        const status404Count = requests.value.filter((request) => request.statusCode === 404).length;
-        const status500Count = requests.value.filter((request) => request.statusCode === 500).length;
+        // Inicializar contadores y timestamps
+        const statusCountMap = {
+            200: { count: 0, lastTimestamp: '' },
+            400: { count: 0, lastTimestamp: '' },
+            404: { count: 0, lastTimestamp: '' },
+            500: { count: 0, lastTimestamp: '' },
+        };
 
-        // Actualizar los contadores y las fechas de manera separada
-        updateStatusCounter(200, status200Count);
-        updateStatusCounter(400, status400Count);
-        updateStatusCounter(404, status404Count);
-        updateStatusCounter(500, status500Count);
+        // Procesar cada solicitud para contar códigos de estado y obtener el último timestamp
+        requests.value.forEach((request) => {
+            const statusCode = request.statusCode; // Código de estado
+            const timestamp = request.timestamp; // Timestamp de la solicitud
+
+            // Si el código de estado es manejado, incrementar el contador
+            if (statusCountMap[statusCode]) {
+                statusCountMap[statusCode].count++;
+                // Actualizar el último timestamp si es más reciente
+                if (timestamp > statusCountMap[statusCode].lastTimestamp) {
+                    statusCountMap[statusCode].lastTimestamp = timestamp;
+                }
+            }
+        });
+
+        // Actualizar los contadores y los timestamps
+        updateStatusCounter(200, statusCountMap[200].count, statusCountMap[200].lastTimestamp);
+        updateStatusCounter(400, statusCountMap[400].count, statusCountMap[400].lastTimestamp);
+        updateStatusCounter(404, statusCountMap[404].count, statusCountMap[404].lastTimestamp);
+        updateStatusCounter(500, statusCountMap[500].count, statusCountMap[500].lastTimestamp);
+
     } catch (error) {
-        console.error('Error al obtener los datos:', error);
+        console.error('Error:', error);
     }
 }
+
 
 // Función para formatear la fecha y hora
 function formatDateTime(dateTime) {

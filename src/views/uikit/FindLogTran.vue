@@ -152,25 +152,41 @@ export default {
             }
         }
 
-        async function downloadLogs() {
-            if (selectedAgents.value.length === 0) {
-                showError('Please select at least one agent to download logs.');
-                return;
-            }
+       //Metodo en la vista
+async function downloadLogs() {
+    if (selectedAgents.value.length === 0) {
+        showError('Please select at least one agent to download logs.');
+        return;
+    }
 
-            const filenames = results.value.map((result) => result.filename);
+    isDowload.value = true; // Iniciar carga
 
-            isDowload.value = true; // Iniciar carga
+    try {
+        // Iterar sobre cada agente seleccionado para descargar los logs
+        for (const agentId of selectedAgents.value) {
+            const agent = agents.value.find((a) => a.idAgent === agentId); // Encontrar el agente correspondiente
+            if (agent) {
+                const filenames = results.value
+                    .filter((result) => result.agentName === agent.agentName)
+                    .map((result) => result.filename); // Extraer los nombres de archivos correspondientes al agente
 
-            try {
-                await LogService.zipLogFile(selectedAgents.value[0], filenames, selectedRegion.value);
-                showSuccess('Logs downloaded successfully');
-            } catch (error) {
-                showError('An error occurred while downloading the logs.');
-            } finally {
-                isDowload.value = false; // Finalizar carga
+                // Crear el nombre de la región y la IP del agente
+                const regionName = regions.value.find((region) => region.id === selectedRegion.value)?.name || 'UnknownRegion';
+                const agentIp = agent.ipagent || 'UnknownIP';
+
+                // Pasar la región y la IP al servicio para descargar
+                await LogService.zipLogFile(agentId, filenames, regionName, agentIp); // Pasa regionName y agentIp por separado
             }
         }
+
+        showSuccess('Logs downloaded successfully');
+    } catch (error) {
+        showError('An error occurred while downloading the logs.');
+    } finally {
+        isDowload.value = false; // Finalizar carga
+    }
+}
+
 
         onMounted(() => {
             loadRegions();
@@ -295,7 +311,6 @@ export default {
                 </div>
             </div>
 
-
             <div v-else>
                 <p>No logs found for the selected transaction ID.</p>
             </div>
@@ -309,8 +324,8 @@ export default {
             </div>
         </Dialog>
 
-           <!-- Modal de carga -->
-           <Dialog v-model:visible="isDowload" modal :dismissableMask="false" :showHeader="false" :closable="false" style="width: 20%; height: 30%; display: flex; align-items: center; justify-content: center">
+        <!-- Modal de carga -->
+        <Dialog v-model:visible="isDowload" modal :dismissableMask="false" :showHeader="false" :closable="false" style="width: 20%; height: 30%; display: flex; align-items: center; justify-content: center">
             <div class="flex flex-col items-center justify-center">
                 <ProgressSpinner />
                 <p class="mt-4">Downloading logs...</p>

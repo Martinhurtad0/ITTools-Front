@@ -94,22 +94,31 @@ export default {
         }
 
         async function downloadSelectedLogs() {
-            if (selectedLogs.value.length > 0) {
-                // Check if there are any selected logs
-                isLoading.value = true; // Open the loading modal
-                try {
-                    // Mapea los nombres de archivo para pasar al servicio
-                    await LogService.zipLogFile(selectedAgent.value, selectedLogs.value, selectedRegion.value);
-                    showSuccess('Logs downloaded successfully');
-                } catch (error) {
-                    showError('Error downloading log file: ' + error.message);
-                } finally {
-                    isLoading.value = false; // Close the loading modal
-                }
-            } else {
-                showError('Please select at least one log to download.');
-            }
+    if (selectedLogs.value.length > 0) {
+        // Verificar si hay logs seleccionados
+        isLoading.value = true; // Abrir el modal de carga
+        try {
+            // Encontrar la IP del agente seleccionado
+            const agent = agents.value.find(a => a.idAgent === selectedAgent.value);
+            const agentIp = agent?.ipagent || 'UnknownIP'; // Usar un valor por defecto si la IP no existe
+            
+            // Obtener el nombre de la región
+            const regionName = regions.value.find(region => region.id === selectedRegion.value)?.name || 'UnknownRegion'; // Obtener el nombre de la región
+
+            // Llamar al servicio pasándole la región y la IP como parámetros
+            await LogService.zipLogFile(selectedAgent.value, selectedLogs.value, regionName, agentIp);
+            
+            showSuccess('Logs downloaded successfully');
+        } catch (error) {
+            showError('Error downloading log file: ' + error.message);
+        } finally {
+            isLoading.value = false; // Cerrar el modal de carga
         }
+    } else {
+        showError('Please select at least one log to download.');
+    }
+}
+
 
         onMounted(() => {
             loadRegions();

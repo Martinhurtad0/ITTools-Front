@@ -41,26 +41,11 @@ const logoStyle = computed(() => (isDarkTheme.value ? { marginLeft: '12px' } : {
         <i class="pi pi-ellipsis-v"></i>
       </button>
 
-      <div class="layout-topbar-menu hidden lg:block">
-        <div class="layout-topbar-menu-content">
-          <button type="button" class="layout-topbar-action">
-            <i class="pi pi-calendar"></i>
-            <span>Calendar</span>
-          </button>
-          <button type="button" class="layout-topbar-action">
-            <i class="pi pi-inbox"></i>
-            <span>Messages</span>
-          </button>
-          <button type="button" class="layout-topbar-action">
-            <i class="pi pi-user"></i>
-            <span>Profile</span>
-          </button>
-        </div>
-      </div>
+     
 
       <!-- Botón de Logout -->
       <button type="button" class="layout-topbar-action" @click="logout">
-        <i class="pi pi-power-off"></i>
+        <i class="pi pi-sign-out"></i>
         <span>Logout</span>
       </button>
     </div>
